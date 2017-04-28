@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""
+Script for Python formatting text copied from:
+https://www.oslobors.no/markedsaktivitet/#/list/shares/quotelist/ose/all/all/false
+"""
+import sys
+
+with open(sys.argv[1], 'r') as f:
+    input_text = f.read()
+
+pruned = []
+for l in input_text.strip().split("\n"):
+    n = ""
+    for w in l.split():
+        if "," not in w:
+            n += " " + w
+        else:
+            pruned.append(n)
+            break
+
+formatted = []
+for l in pruned:
+    l = l.strip()
+    words = l.split()
+    formatted.append('"' + words[0] + '"')
+
+output_text = ",\n".join(formatted)
+print(output_text)
