@@ -2,6 +2,7 @@
 
 import os
 import sys
+import pickle
 
 # add relative python dir to pathx
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -11,3 +12,4 @@ from markets import OsloBors
 
 oslobors = OsloBors()
 oslobors.load()
+oslobors.pickle()

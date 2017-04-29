@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import os
+import gzip
+from urllib.request import urlopen
+from datetime import datetime
+import progressbar
+import numpy as np
+import pickle
+
 from markets._classes import Market, Ticker, Index
+from markets import DATA_DIR, PICKLE_PATH
 
 # Tickers on Oslo Børs
 _market_ose = [("ASC", "ABG Sundal Collier Holding"),
@@ -132,7 +141,7 @@ _market_ose = [("ASC", "ABG Sundal Collier Holding"),
                ("RENO", "RenoNorden"),
                ("SALM", "SalMar"),
                ("SADG", "Sandnes Sparebank"),
-               ("SAS", "NOK SAS AB"),
+               ("SAS-NOK", "NOK SAS AB"),
                ("SSO", "Scatec Solar"),
                ("SCHA", "Schibsted ser. A"),
                ("SCHB", "Schibsted ser. B"),
@@ -209,7 +218,7 @@ _market_oax = [("AEGA", "Aega"),
                ("NORTH", "North Energy"),
                ("PCIB", "PCI Biotech Holding"),
                ("PHLY", "Philly Shipyard"),
-               ("PPG", "PREF Pioneer Property Group"),
+               ("PPG-PREF", "PREF Pioneer Property Group"),
                ("ROM", "RomReal"),
                ("SDSD", "S.D. Standard Drilling"),
                ("SAGA", "Saga Tankers"),
@@ -346,7 +355,7 @@ _sector_industri = [("AFG", "AF Gruppen"),
                     ("ODFB", "Odfjell ser. B"),
                     ("PHLY", "Philly Shipyard"),
                     ("RENO", "RenoNorden"),
-                    ("SAS", "NOK SAS AB"),
+                    ("SAS-NOK", "NOK SAS AB"),
                     ("SSHIP", "Scanship Holding"),
                     ("SOLV", "Solvang"),
                     ("SBULK-ME", "Songa Bulk"),
@@ -460,7 +469,7 @@ _sector_forsyning = [("AEGA", "Aega"),
 _sector_eiendom = [("ENTRA", "Entra"),
                    ("NPRO", "Norwegian Property"),
                    ("OLT", "Olav Thon Eiendomsselskap"),
-                   ("PPG", "PREF Pioneer Property Group"),
+                   ("PPG-PREF", "PREF Pioneer Property Group"),
                    ("ROM", "RomReal"),
                    ("SBO", "Selvaag Bolig"),
                    ("SOLON", "Solon Eiendom"),
@@ -581,7 +590,7 @@ _segment_match = [("ASC", "ABG Sundal Collier Holding"),
                   ("QFR", "Q-Free"),
                   ("QEC", "Questerre Energy Corporation"),
                   ("RENO", "RenoNorden"),
-                  ("SAS", "NOK SAS AB"),
+                  ("SAS-NOK", "NOK SAS AB"),
                   ("SSO", "Scatec Solar"),
                   ("SCHB", "Schibsted ser. B"),
                   ("SBX", "SeaBird Exploration"),
@@ -803,7 +812,11 @@ _indexes = [("OSEBX", "Hovedindeksen"),
 
 class OsloBors(object):
     def __init__(self):
-
+        
+        # construct paths for markets and indexes
+        self._markets_dir = os.path.join(DATA_DIR, "markets")
+        self._indexes_dir = os.path.join(DATA_DIR, "indexes")
+        
         # dict containing all tickers indexed by MARKET_NAME.TICKER_NAME
         self.tickers = {}
 
@@ -894,3 +907,146 @@ class OsloBors(object):
 
     def __str__(self):
         return "Oslo Børs"
+
+    def _download_gz(self, url, dest_file):
+        """
+        Download file from url to path dest_file.
+        The file will be in gzip format
+        """
+        data = urlopen(url).read()
+        
+        with gzip.GzipFile(dest_file, "wb") as f:
+            f.write(data)
+
+    def download(self):
+        """
+        Download the daily history for all tickers and indexes from Netfonds
+        DATA_DIR is used for target dir.
+        Overwrites existing files.
+        """
+
+        # check that DATA_DIR exists
+        if not os.path.isdir(DATA_DIR):
+            raise Exception("Dest dir not found " + DATA_DIR)
+
+        # create top dirs
+        if not os.path.isdir(self._markets_dir):
+            os.makedirs(self._markets_dir)
+            
+        if not os.path.isdir(self._indexes_dir):
+            os.makedirs(self._indexes_dir)
+
+        # list of tuples with (url, dest_file) to download
+        download_list = []
+        
+        # add tickers to download list
+        for market in self.markets.values():
+            market_dir = os.path.join(self._markets_dir, market.name)
+
+            # create market dir
+            if not os.path.isdir(market_dir):
+                os.makedirs(market_dir)
+
+            for ticker in market.tickers:
+                ticker_file = os.path.join(market_dir, ticker.name)
+                download_list.append((ticker.netfonds_url, ticker_file))
+            
+        # add indexes to download list
+        for index in self.indexes.values():
+            index_file = os.path.join(self._indexes_dir, index.name)
+            
+            download_list.append((index.netfonds_url, index_file))
+
+        # create progressbar
+        bar = progressbar.ProgressBar(maxval=len(download_list))
+        bar.start()
+
+        # download all files in the list
+        for i, (url, dest_file) in enumerate(download_list):
+            self._download_gz(url, dest_file + ".gz")
+            bar.update(i)
+
+        bar.finish()
+        print("Downloaded " + str(i) + " files to " + DATA_DIR)
+
+    def _load_file(self, file_path):
+        """
+        Load the file.
+        
+        Return:
+           A numpy named array
+        """
+
+        # read the gzip file
+        with gzip.GzipFile(file_path, 'rb') as f:
+            file_data = f.read().decode('latin-1')
+
+        # split the file into lines
+        lines = file_data.strip().split("\n")
+
+        # remove the first item, which is the column headers
+        lines.pop(0)        
+
+        # create an empty return matrix
+        matrix = np.zeros(shape=len(lines),
+                          dtype=[('date', 'f8'),
+                                 ('open', 'f8'),
+                                 ('high', 'f8'),
+                                 ('low', 'f8'),
+                                 ('close', 'f8'),
+                                 ('volume', 'i8'),
+                                 ('value', 'i8')])
+
+        # fill in the return matrix
+        for line_num, line in enumerate(lines):
+
+            try:
+                # unpack row items)
+                (date, paper, exchange, open_price, high_price,
+                 low_price, close_price, volume, value) = line.split(";")
+                
+                # parse row items
+                date = datetime.strptime(date, '%Y%m%d').timestamp()
+                open_price = float(open_price)
+                high_price = float(high_price)          
+                low_price = float(low_price)
+                close_price = float(close_price)
+                volume = float(volume)
+                value = float(value)
+                
+                matrix[line_num] = date, open_price, high_price, low_price, \
+                                   close_price, volume, value
+            except:
+                print("Failed to load file " + str(file_path) + " line " + \
+                      str(line_num) + "Line: \"" + str(line) + "\"")
+                return None
+
+        # sort rows on time column, there has been some swapped samples detected in the source
+        matrix = np.sort(matrix, order='date')
+
+        return matrix
+        
+    def load(self):
+        """
+        Load files from DATA_DIR
+        """
+        
+        # load tickers
+        for market in self.markets.values():
+            market_dir = os.path.join(self._markets_dir, market.name)
+            
+            for ticker in market.tickers:
+                ticker_file = os.path.join(market_dir, ticker.name) + ".gz"
+                ticker.data = self._load_file(ticker_file)
+                
+        # load indexes
+        for index in self.indexes.values():
+            index_file = os.path.join(self._indexes_dir, index.name) + ".gz"
+            index.data = self._load_file(index_file)
+        
+    def pickle(self):
+        """
+        Pickle this object to PICKLE_PATH
+        """
+        with open(PICKLE_PATH, "wb" ) as f:
+            pickle.dump(self,  f)
