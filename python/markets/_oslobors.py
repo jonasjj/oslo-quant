@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from _classes import Market, Ticker
+
 # Tickers on Oslo Børs
 _market_ose = [("ASC", "ABG Sundal Collier Holding"),
                ("AFG", "AF Gruppen"),
@@ -650,3 +652,36 @@ _indexes = [('OSEBX', 'Hovedindeksen'),
             ('OSLENX', 'OSLO Energy Index'),
             ('OSLSHX', 'OSLO Shipping Index')]
 
+# dict containing all tickers indexed by MARKET_NAME.TICKER_NAME
+tickers = {}
+
+# Create public markets dict indexed by market name
+markets = {}
+for market_name, market_long_name in _markets:
+
+    # look for a local variable matching the market name
+    market_list_name = "_market_" + market_name.lower()
+    try:
+        market_list = locals()[market_list_name]
+    except KeyError:
+        raise Exception("Missing list " + market_list_name)
+
+    # create market instance
+    market = Market(market_name, market_long_name)
+    markets[market_name] = market
+
+    # parse tickers in this market list
+    for ticker_name, ticker_long_name in market_list:
+
+        # Create ticker object
+        ticker = Ticker(ticker_name, ticker_long_name, market)
+
+        # add ticker to market instance
+        market.tickers.append(ticker)
+
+        # add ticker to dict of all tickers with key MARKET.TICKER ex. 'OSE.STL'
+        tickers[market_name + "." + ticker_name] = ticker
+    
+    
+
+        
