@@ -3,13 +3,10 @@
 Script for Python formatting text copied from:
 https://www.oslobors.no/markedsaktivitet/#/list/shares/quotelist/ose/all/all/false
 """
-import sys
-
-with open(sys.argv[1], 'r') as f:
-    input_text = f.read()
+import fileinput
 
 pruned = []
-for l in input_text.strip().split("\n"):
+for l in fileinput.input():
     n = ""
     for w in l.split():
         if "," not in w:
