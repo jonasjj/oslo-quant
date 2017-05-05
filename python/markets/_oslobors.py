@@ -905,6 +905,15 @@ class OsloBors(object):
                 ticker = self.tickers[ticker_name]
                 index.tickers.append(ticker)
 
+        # dict containing all instruments indexed by name
+        self.instruments = {}
+    
+        # merge all instruments
+        for k,v in list(self.tickers.items()) + list(self.indexes.items()):
+            if k in self.instruments:
+                raise Exception(k + " is already in self.instruments")
+            self.instruments[k] = v
+
     def __str__(self):
         return "Oslo Børs"
 
