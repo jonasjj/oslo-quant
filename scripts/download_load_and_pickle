@@ -26,7 +26,7 @@ def download_oslobors():
     oslobors = OsloBors()
     oslobors.load()
 
-    print("Picling the OsloBors object")
+    print("Pickling the OsloBors object")
     oslobors.pickle()
 
 def download_nasdaqomx():
@@ -37,5 +37,8 @@ if args.all or args.oslobors:
     
 elif args.all or args.nasdaqomx:
     download_nasdaqomx()
+
+else:
+    parser.print_help()
 
 

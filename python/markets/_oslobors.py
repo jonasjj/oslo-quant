@@ -9,7 +9,7 @@ import numpy as np
 import pickle
 
 from markets._classes import Market, Ticker, Index
-from markets import DATA_DIR, PICKLE_PATH
+from markets import DATA_DIR, OSLOBORS_PICKLE_PATH
 
 # Tickers on Oslo Børs
 _market_ose = [("ASC", "ABG Sundal Collier Holding"),
@@ -934,11 +934,7 @@ class OsloBors(object):
         Overwrites existing files.
         """
 
-        # check that DATA_DIR exists
-        if not os.path.isdir(DATA_DIR):
-            raise Exception("Dest dir not found " + DATA_DIR)
-
-        # create top dirs
+        # create dirs
         if not os.path.isdir(self._markets_dir):
             os.makedirs(self._markets_dir)
             
@@ -972,7 +968,7 @@ class OsloBors(object):
 
         # download all files in the list
         for i, (url, dest_file) in enumerate(download_list):
-            self._download_gz(url, dest_file + ".gz")
+            self._download_gz(url, dest_file + ".p.gz")
             bar.update(i)
 
         bar.finish()
@@ -1045,17 +1041,17 @@ class OsloBors(object):
             market_dir = os.path.join(self._markets_dir, market.name)
             
             for ticker in market.tickers:
-                ticker_file = os.path.join(market_dir, ticker.name) + ".gz"
+                ticker_file = os.path.join(market_dir, ticker.name) + ".p.gz"
                 ticker.data = self._load_file(ticker_file)
                 
         # load indexes
         for index in self.indexes.values():
-            index_file = os.path.join(self._indexes_dir, index.name) + ".gz"
+            index_file = os.path.join(self._indexes_dir, index.name) + ".p.gz"
             index.data = self._load_file(index_file)
         
     def pickle(self):
         """
         Pickle this object to PICKLE_PATH
         """
-        with open(PICKLE_PATH, "wb" ) as f:
+        with open(OSLOBORS_PICKLE_PATH, "wb" ) as f:
             pickle.dump(self,  f)
