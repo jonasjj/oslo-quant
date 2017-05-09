@@ -836,7 +836,9 @@ class OsloBors(object):
             for ticker_name, ticker_long_name in market_list:
 
                 # Create ticker object
-                ticker = Ticker(ticker_name, ticker_long_name, market)
+                url = "http://hopey.netfonds.no/paperhistory.php?paper=" + \
+                      ticker_name + "." + market.name + "&csv_format=sdv"
+                ticker = Ticker(ticker_name, ticker_long_name, market, url)
 
                 # add ticker to market instance
                 market.tickers.append(ticker)
@@ -897,7 +899,9 @@ class OsloBors(object):
             index_list = globals()[index_list_name]
 
             # Create index instance
-            index = Index(index_name, index_long_name)
+            url = "http://hopey.netfonds.no/paperhistory.php?paper=" + \
+                  index_name + ".OSE&csv_format=sdv"
+            index = Index(index_name, index_long_name, url)
             self.indexes[index_name] = index
 
             # parse ticker names from index list
@@ -929,7 +933,7 @@ class OsloBors(object):
 
     def download(self):
         """
-        Download the daily history for all tickers and indexes from Netfonds
+        Download the daily history for all tickers and indexes from netfonds.no
         DATA_DIR is used for target dir.
         Overwrites existing files.
         """
@@ -954,13 +958,13 @@ class OsloBors(object):
 
             for ticker in market.tickers:
                 ticker_file = os.path.join(market_dir, ticker.name)
-                download_list.append((ticker.netfonds_url, ticker_file))
+                download_list.append((ticker.url, ticker_file))
             
         # add indexes to download list
         for index in self.indexes.values():
             index_file = os.path.join(self._indexes_dir, index.name)
             
-            download_list.append((index.netfonds_url, index_file))
+            download_list.append((index.url, index_file))
 
         # create progressbar
         bar = progressbar.ProgressBar(maxval=len(download_list))
@@ -968,7 +972,7 @@ class OsloBors(object):
 
         # download all files in the list
         for i, (url, dest_file) in enumerate(download_list):
-            self._download_gz(url, dest_file + ".p.gz")
+            self._download_gz(url, dest_file + ".sdv.gz")
             bar.update(i)
 
         bar.finish()
@@ -1041,17 +1045,17 @@ class OsloBors(object):
             market_dir = os.path.join(self._markets_dir, market.name)
             
             for ticker in market.tickers:
-                ticker_file = os.path.join(market_dir, ticker.name) + ".p.gz"
+                ticker_file = os.path.join(market_dir, ticker.name) + ".sdv.gz"
                 ticker.data = self._load_file(ticker_file)
                 
         # load indexes
         for index in self.indexes.values():
-            index_file = os.path.join(self._indexes_dir, index.name) + ".p.gz"
+            index_file = os.path.join(self._indexes_dir, index.name) + ".sdv.gz"
             index.data = self._load_file(index_file)
         
     def pickle(self):
         """
-        Pickle this object to PICKLE_PATH
+        Pickle this object to OSLOBORS_PICKLE_PATH
         """
         with open(OSLOBORS_PICKLE_PATH, "wb" ) as f:
             pickle.dump(self,  f)

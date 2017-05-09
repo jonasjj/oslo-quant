@@ -31,6 +31,11 @@ def download_oslobors():
 
 def download_nasdaqomx():
     print("NasdaqOMX download is not implementd yet")
+    from markets import NasdaqOmx
+
+    print("Downloading from Nasdaq OMX")
+    nasdaqomx = NasdaqOmx()
+    nasdaqomx.download()
     
 if args.all or args.oslobors:
     download_oslobors()

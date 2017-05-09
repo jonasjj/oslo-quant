@@ -18,19 +18,17 @@ class Market(Instrument):
         self.tickers = []
 
 class Ticker(Instrument):
-    def __init__(self, name, long_name, market):
+    def __init__(self, name, long_name, market, url):
         super().__init__(name, long_name)
         self.market = market
         self.sector_name = None
         self.data = None
         self.segments = []
-        self.netfonds_url = "http://hopey.netfonds.no/paperhistory.php?paper=" + \
-                            name + "." + market.name + "&csv_format=sdv"
+        self.url = url
 
 class Index(Instrument):
-    def __init__(self, name, long_name):
+    def __init__(self, name, long_name, url):
         super().__init__(name, long_name)
         self.data = None
         self.tickers = []
-        self.netfonds_url = "http://hopey.netfonds.no/paperhistory.php?paper=" + \
-                            name + ".OSE&csv_format=sdv"
+        self.url = url

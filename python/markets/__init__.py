@@ -7,6 +7,7 @@ NASDAQOMX_PICKLE_PATH = DATA_DIR + "/.pickle"
 
 # make this class public outside of this package
 from markets._oslobors import OsloBors
+from markets._nasdaqomx import NasdaqOmx
 
 def get_pickled_oslobors():
     """
