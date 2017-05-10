@@ -976,7 +976,7 @@ class OsloBors(object):
             bar.update(i)
 
         bar.finish()
-        print("Downloaded " + str(i) + " files to " + DATA_DIR)
+        print("Downloaded " + str(i+1 + " files to " + DATA_DIR)
 
     def _load_file(self, file_path):
         """
