@@ -40,10 +40,7 @@ def download_nasdaqomx():
 if args.all or args.oslobors:
     download_oslobors()
     
-elif args.all or args.nasdaqomx:
+if args.all or args.nasdaqomx:
     download_nasdaqomx()
-
-else:
-    parser.print_help()
 
 

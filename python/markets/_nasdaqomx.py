@@ -4,9 +4,9 @@ import pickle
 import os
 import progressbar
 from urllib.request import urlopen
-import tempdir
 import shutil
 import subprocess
+import tempfile
 
 from markets._classes import Index
 from markets import DATA_DIR, NASDAQOMX_PICKLE_PATH
