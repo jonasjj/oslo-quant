@@ -92,9 +92,10 @@ class NasdaqOmx(object):
         # Create a temp dir
         temp_dir = tempfile.mkdtemp(prefix="_nasdaqomx.py")
 
-        # copy file to temp dir
-        shutil.copyfile(file_path, temp_dir)
         temp_file_path = os.path.join(temp_dir, file_path.split("/")[-1])
+        
+        # copy file to temp dir
+        shutil.copyfile(file_path, temp_file_path)
 
         # convert to semicolon-separated CSV file using shell command 'unoconv'
         cmd = 'unoconv -e FilterOptions="59,34,0,1" -f csv ' + temp_file_path
