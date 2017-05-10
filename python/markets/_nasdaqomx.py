@@ -3,8 +3,10 @@
 import pickle
 import os
 import progressbar
-import gzip
 from urllib.request import urlopen
+import tempdir
+import shutil
+import subprocess
 
 from markets._classes import Index
 from markets import DATA_DIR, NASDAQOMX_PICKLE_PATH
@@ -38,14 +40,13 @@ class NasdaqOmx(object):
     def __str__(self):
         return "Nasdaq OMX"
 
-    def _download_gz(self, url, dest_file):
+    def _download(self, url, dest_file):
         """
         Download file from url to path dest_file.
-        The file will be in gzip format
         """
         data = urlopen(url).read()
         
-        with gzip.GzipFile(dest_file, "wb") as f:
+        with open(dest_file, "wb") as f:
             f.write(data)
 
     def download(self):
@@ -74,7 +75,7 @@ class NasdaqOmx(object):
 
         # download all files in the list
         for i, (url, dest_file) in enumerate(download_list):
-            self._download_gz(url, dest_file + ".xlsx.gz")
+            self._download(url, dest_file + ".xlsx")
             bar.update(i)
 
         bar.finish()
@@ -87,13 +88,33 @@ class NasdaqOmx(object):
         Return:
            A numpy named array
         """
-        pass
+
+        # Create a temp dir
+        temp_dir = tempfile.mkdtemp(prefix="_nasdaqomx.py")
+
+        # copy file to temp dir
+        shutil.copyfile(file_path, temp_dir)
+        temp_file_path = os.path.join(temp_dir, file_path.split("/")[-1])
+
+        # convert to semicolon-separated CSV file using shell command 'unoconv'
+        cmd = 'unoconv -e FilterOptions="59,34,0,1" -f csv ' + temp_file_path
+        subprocess.run(cmd,
+                       shell=True, check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # parse the converted CSV file
+        import ipdb; ipdb.set_trace()
+                
+        # delete the temp dir with contents
+        shutil.rmtree(temp_dir)
         
     def load(self):
         """
         Load files from DATA_DIR
         """
-        pass
+        for index in self.indexes.values():
+            index_file = os.path.join(self._indexes_dir, index.name) + ".xlsx"
+            index.data = self._load_file(index_file)
         
     def pickle(self):
         """
