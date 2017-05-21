@@ -7,7 +7,7 @@ class Instrument(object):
         self.long_name = long_name
         
     def __str__(self):
-        return self.long_name
+        return self.name
 
     def __repr__(self):
         return self.name
