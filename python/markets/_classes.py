@@ -33,6 +33,18 @@ class Instrument(object):
         return datetime.fromtimestamp(self.data[-1]['date'])
 
     def get_day(self, date):
+        """
+        Get the data for a specific date.
+        
+        Return:
+           
+        """
+        raise NotImplementedError
+
+    def get_day_or_first_after(self, date):
+        raise NotImplementedError
+
+    def get_day_or_first_before(self, date):
         raise NotImplementedError
 
 class Market(Instrument):
