@@ -9,7 +9,7 @@ NASDAQOMX_PICKLE_PATH = DATA_DIR + "/nasdaqomx.p"
 from markets._oslobors import OsloBors
 from markets._nasdaqomx import NasdaqOmx
 
-def get_pickled_oslobors():
+def get_oslobors():
     """
     Get a pickled OsloBors instance""
     
@@ -20,7 +20,7 @@ def get_pickled_oslobors():
         import pickle
         return pickle.load(f)
 
-def get_pickled_nasdaqomx():
+def get_nasdaqomx():
     """
     Get a pickled NasdaqOmx instance""
     
@@ -30,3 +30,4 @@ def get_pickled_nasdaqomx():
     with open(NASDAQOMX_PICKLE_PATH, 'rb') as f:
         import pickle
         return pickle.load(f)
+

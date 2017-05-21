@@ -1,7 +1,7 @@
 from datetime import datetime
 import argparse
 
-from markets import get_pickled_oslobors
+from markets import get_oslobors
 
 def parse_date(date_str):
     """
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # load the instrument from the database
-    oslobors = get_pickled_oslobors()
+    oslobors = get_oslobors()
     instrument = oslobors.instruments[args.instrument]
     
     buy_date = parse_date(args.buy_date)
