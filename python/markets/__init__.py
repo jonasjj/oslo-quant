@@ -19,3 +19,14 @@ def get_pickled_oslobors():
     with open(OSLOBORS_PICKLE_PATH, 'rb') as f:
         import pickle
         return pickle.load(f)
+
+def get_pickled_nasdaqomx():
+    """
+    Get a pickled NasdaqOmx instance""
+    
+    Return:
+       An NasdaqOmx instance
+    """
+    with open(NASDAQOMX_PICKLE_PATH, 'rb') as f:
+        import pickle
+        return pickle.load(f)
