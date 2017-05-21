@@ -7,6 +7,8 @@ from urllib.request import urlopen
 import shutil
 import subprocess
 import tempfile
+from datetime import datetime
+import numpy as np
 
 from markets._classes import Index
 from markets import DATA_DIR, NASDAQOMX_PICKLE_PATH
@@ -55,7 +57,7 @@ class NasdaqOmx(object):
         DATA_DIR is used for target dir.
         Overwrites existing files.
         """
-
+        
         # create dir
         if not os.path.isdir(self._indexes_dir):
             os.makedirs(self._indexes_dir)
@@ -103,11 +105,55 @@ class NasdaqOmx(object):
                        shell=True, check=True,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        # parse the converted CSV file
-        import ipdb; ipdb.set_trace()
-                
+        # path to the new CSV file
+        csv_file = temp_file_path.rpartition(".")[0] + ".csv"
+        
+        # read the converted CSV file into a list of lines
+        with open(csv_file, 'r', encoding="utf-8") as f:
+            data = f.read()
+
+            # files sometimes contain this character as space
+            data = data.replace(u'\xa0','')
+
+            # replace comma with point
+            data = data.replace(',', '.')
+
+            # remove spaces. numbers are like: "1 615,26913657638"
+            data = data.replace(' ', '')
+
+            # split into list of lines
+            lines = data.strip().split("\n")
+            
+        # parse from the second line. the first line contains column headers
+        data = []
+        for line in lines[1:]:
+
+            # unpack the cells from this row
+            date, value, net_change, high, low = line.split(";")
+
+            # parse row items
+            date = datetime.strptime(date, '%d.%m.%Y').timestamp()
+            value = float(value)
+            net_change = float(net_change)
+            high = float(high)
+            low = float(low)
+
+            # only use days that have trades
+            if(value > 0):
+                data.append((date, value, net_change, high, low))
+
+        # create numpy matrix from the list of tuples
+        matrix = np.array(data,
+                          dtype=[('date', 'f8'),
+                                 ('value', 'f8'),
+                                 ('net_change', 'f8'),
+                                 ('high', 'f8'),
+                                 ('low', 'f8')])
+            
         # delete the temp dir with contents
         shutil.rmtree(temp_dir)
+
+        return matrix
         
     def load(self):
         """
@@ -119,7 +165,7 @@ class NasdaqOmx(object):
         
     def pickle(self):
         """
-        Pickle this object to NORDNETOMX_PICKLE_PATH
+        Pickle this object to NASDAQOMX_PICKLE_PATH
         """
-        with open(NORDNETOMX_PICKLE_PATH, "wb" ) as f:
+        with open(NASDAQOMX_PICKLE_PATH, "wb" ) as f:
             pickle.dump(self,  f)

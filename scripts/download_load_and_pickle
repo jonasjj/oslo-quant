@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -24,18 +25,25 @@ def download_oslobors():
 
     print("Creating OsloBors object")
     oslobors = OsloBors()
+
+    print("Loading the data into the OsloBors object")
     oslobors.load()
 
     print("Pickling the OsloBors object")
     oslobors.pickle()
 
 def download_nasdaqomx():
-    print("NasdaqOMX download is not implementd yet")
     from markets import NasdaqOmx
 
     print("Downloading from Nasdaq OMX")
     nasdaqomx = NasdaqOmx()
     nasdaqomx.download()
+
+    print("Loading the data into the NasdaqOmx object")
+    nasdaqomx.load()
+
+    print("Pickling the NasdaqOmx object")
+    nasdaqomx.pickle()
     
 if args.all or args.oslobors:
     download_oslobors()
