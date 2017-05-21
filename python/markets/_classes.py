@@ -1,3 +1,5 @@
+from datetime import datetime
+
 """
 File containing classes for markets, indexes and tickers
 """
@@ -11,6 +13,27 @@ class Instrument(object):
 
     def __repr__(self):
         return self.name
+
+    def get_first_timestamp(self):
+        """
+        Get the first data item for this instrument
+        
+        Return:
+           datetime.datetime
+        """
+        return datetime.fromtimestamp(self.data[0]['date'])
+
+    def get_last_timestamp(self):
+        """
+        Get the last data item for this instrument
+        
+        Return:
+           datetime.datetime
+        """
+        return datetime.fromtimestamp(self.data[-1]['date'])
+
+    def get_day(self, date):
+        raise NotImplementedError
 
 class Market(Instrument):
     def __init__(self, name, long_name):

@@ -96,6 +96,5 @@ def get_instrument(name):
     Raises:
        KeyError: On item not found
     """
-
     instruments = get_instruments()
     return instruments[name]

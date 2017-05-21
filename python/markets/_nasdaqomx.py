@@ -124,9 +124,11 @@ class NasdaqOmx(object):
             # split into list of lines
             lines = data.strip().split("\n")
             
-        # parse from the second line. the first line contains column headers
+        # Parse from the second line.
+        # The first line contains column headers.
+        # The list is reversed compared to other markets
         data = []
-        for line in lines[1:]:
+        for line in reversed(lines[1:]):
 
             # unpack the cells from this row
             date, value, net_change, high, low = line.split(";")

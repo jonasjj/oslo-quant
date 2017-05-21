@@ -1,7 +1,7 @@
 from datetime import datetime
 import argparse
 
-from markets import get_oslobors
+from markets import get_instrument
 
 def parse_date(date_str):
     """
@@ -21,39 +21,43 @@ def find_expected_return_from_to_date(instrument, buy_date, sell_date):
         raise ValueError("Sell date is before buy date")
     
     # get the first and last timestamp in the available data
-    first_timestamp = datetime.fromtimestamp(instrument.data[0]['date'])
-    last_timestamp = datetime.fromtimestamp(instrument.data[-1]['date'])
-
-    # days of available data
-    #days_data = (last_timestamp - first_timestamp).days
+    first_timestamp = instrument.get_first_timestamp()
+    last_timestamp = instrument.get_last_timestamp()
 
     # estimate days
     days = (sell_date - buy_date).days
 
-    # go to the first available start date
-    start_date = datetime(first_timestamp.year, buy_date.month, buy_date.day)
-    if start_date < first_timestamp:
-        start_date = datetime(start_date.year + 1, start_date.month, start_date.day)
+    # rewind to the first available buy date
+    _buy_date = buy_date
+    _sell_date = sell_date
+    while _buy_date > first_timestamp:
 
-    # go to the first available sell date
-    end_date = datetime(
-        (sell_date.year - buy_date.year) + start_date.year,
-        sell_date.month,
-        sell_date.day)
+        # decrement by 1 year
+        _buy_date = datetime(_buy_date.year - 1, _buy_date.month, _buy_date.day)
+        _sell_date = datetime(_sell_date.year - 1, _sell_date.month, _sell_date.day)
 
+    # this is the first possible starting point
+    _buy_date = datetime(_buy_date.year + 1, _buy_date.month, _buy_date.day)
+    _sell_date = datetime(_sell_date.year + 1, _sell_date.month, _sell_date.day)
+
+    if _buy_date < first_timestamp or _sell_date > last_timestamp:
+        raise KeyError("Not enough data")
     
-    import ipdb; ipdb.set_trace()
     years = []
-    while end_date <= last_timestamp:
-        
-        
-        years.append((start_date.year,))
+    accumulated_gain = 0
+    while _sell_date <= last_timestamp:
+
+        buy = instrument.get_day(_buy_date)['value']
+        sell = instrument.get_day(_sell_date)['value']
+        gain = sell - buy
+        years.append((_buy_date, _sell_date, buy, sell, gain))
 
         # increment by 1 year
-        start_date = datetime(start_date.year + 1, start_date.month, start_date.day)
-        end_date = datetime(end_date.year + 1, end_date.month, end_date.day)
-    
+        _buy_date = datetime(_buy_date.year + 1, _buy_date.month, _buy_date.day)
+        _sell_date = datetime(_sell_date.year + 1, _sell_date.month, _sell_date.day)
 
+    return years
+    
     
 
 if __name__ == "__main__":
@@ -65,9 +69,8 @@ if __name__ == "__main__":
     parser.add_argument("sell_date", help="Sell date")
     args = parser.parse_args()
 
-    # load the instrument from the database
-    oslobors = get_oslobors()
-    instrument = oslobors.instruments[args.instrument]
+    # get the instrument from the database
+    instrument = get_instrument(args.instrument.upper())
     
     buy_date = parse_date(args.buy_date)
     sell_date = parse_date(args.sell_date)
