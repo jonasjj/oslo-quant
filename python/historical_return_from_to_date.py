@@ -1,5 +1,6 @@
 from datetime import datetime
 import argparse
+from pprint import pprint
 
 from markets import get_instrument
 
@@ -47,10 +48,10 @@ def find_expected_return_from_to_date(instrument, buy_date, sell_date):
     accumulated_gain = 0
     while _sell_date <= last_timestamp:
 
-        buy = instrument.get_day(_buy_date)['value']
-        sell = instrument.get_day(_sell_date)['value']
-        gain = sell - buy
-        years.append((_buy_date, _sell_date, buy, sell, gain))
+        buy = instrument.get_day_or_first_after(_buy_date)
+        sell = instrument.get_day_or_first_after(_sell_date)
+        gain = sell ['value'] - buy['value']
+        years.append((buy['date'], sell['date'], buy['value'], sell['value'], gain))
 
         # increment by 1 year
         _buy_date = datetime(_buy_date.year + 1, _buy_date.month, _buy_date.day)
@@ -75,4 +76,4 @@ if __name__ == "__main__":
     buy_date = parse_date(args.buy_date)
     sell_date = parse_date(args.sell_date)
 
-    print(find_expected_return_from_to_date(instrument, buy_date, sell_date))
+    pprint(find_expected_return_from_to_date(instrument, buy_date, sell_date))
