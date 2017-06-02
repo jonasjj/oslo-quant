@@ -49,14 +49,14 @@ def find_historical_return_from_to_date(instrument, buy_date, sell_date):
     trades = []
     accumulated_gain = 0
     accumulated_gain_ratio = 0
-    trade_count = 0
+    year_count = 0
     pos_gain_trades = 0
     neg_gain_trades = 0
 
     gain_ratios = []
         
     while _sell_date <= last_timestamp:
-        trade_count += 1
+        year_count += 1
 
         buy = instrument.get_day_or_first_after(_buy_date)
         sell = instrument.get_day_or_first_after(_sell_date)
@@ -81,14 +81,14 @@ def find_historical_return_from_to_date(instrument, buy_date, sell_date):
         _buy_date = datetime(_buy_date.year + 1, _buy_date.month, _buy_date.day)
         _sell_date = datetime(_sell_date.year + 1, _sell_date.month, _sell_date.day)
 
-    if trade_count == 0:
+    if year_count == 0:
         raise ValueError("There are no historical trades for these dates")
         
-    avg_gain = accumulated_gain / trade_count
-    avg_gain_ratio = accumulated_gain_ratio / trade_count
+    avg_gain = accumulated_gain / year_count
+    avg_gain_ratio = accumulated_gain_ratio / year_count
 
     try:
-        pos_gain_ratio = pos_gain_trades / trade_count
+        pos_gain_ratio = pos_gain_trades / year_count
     except ZeroDivisionError:
         pos_gain_ratio = 0
         
@@ -97,7 +97,7 @@ def find_historical_return_from_to_date(instrument, buy_date, sell_date):
         
     data = OrderedDict()
     data['trades'] = trades
-    data['trade_count'] = trade_count
+    data['year_count'] = year_count
     data['avg_gain_ratio'] = avg_gain_ratio
     data['pos_gain_ratio'] = pos_gain_ratio
     data['variance'] = variance
