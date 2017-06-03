@@ -54,26 +54,39 @@ def find_historical_return_from_to_date(instrument, buy_date, sell_date):
     neg_gain_trades = 0
 
     gain_ratios = []
+
+    # use the close price if it exists
+    if 'close' in instrument.data.dtype.names:
+        value_key = 'close'
+    else:
+        value_key = 'value'
         
+    
     while _sell_date <= last_timestamp:
         year_count += 1
 
         buy = instrument.get_day_or_first_after(_buy_date)
         sell = instrument.get_day_or_first_after(_sell_date)
-        gain = sell['value'] - buy['value']
-        gain_ratio = (sell['value'] / buy['value']) - 1
+
+        gain = sell[value_key] - buy[value_key]
+        gain_ratio = (sell[value_key] / buy[value_key]) - 1
         gain_ratios.append(gain_ratio)
         accumulated_gain += gain
         accumulated_gain_ratio += gain_ratio
 
         if gain > 0:
             pos_gain_trades += 1
+
+        # sanity checking of the input data
+        if buy[value_key] == 0 or sell[value_key] == 0:
+            raise Exception("Value is 0. The input data is erroneous")
+        
         
         trade=OrderedDict()
         trade['buy_date'] = buy['date']
         trade['sell_date'] = sell['date']
-        trade['buy'] = buy['value']
-        trade['sell'] = sell['value']
+        trade['buy'] = buy[value_key]
+        trade['sell'] = sell[value_key]
         trade['gain_ratio'] = gain_ratio
         trades.append(trade)
 
