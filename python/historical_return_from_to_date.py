@@ -18,7 +18,7 @@ def parse_date(date_str):
     """
     return datetime.strptime(date_str, "%Y-%m-%d")
 
-def find_historical_return_from_to_date(instrument, buy_date, sell_date):
+def historical_return_from_to_date(instrument, buy_date, sell_date):
 
     if buy_date > sell_date:
         raise ValueError("Sell date is before buy date")
@@ -132,4 +132,4 @@ if __name__ == "__main__":
     buy_date = parse_date(args.buy_date)
     sell_date = parse_date(args.sell_date)
 
-    pprint(find_historical_return_from_to_date(instrument, buy_date, sell_date))
+    pprint(historical_return_from_to_date(instrument, buy_date, sell_date))
