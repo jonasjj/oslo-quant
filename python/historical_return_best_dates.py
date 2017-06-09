@@ -43,14 +43,20 @@ def historical_return_best_dates_by_avg_gain_ratio(instrument,
                                                    days_between):
     
     results = _historical_return_dates(instrument, days_between)
-    results.sort(key=lambda x: x[2], reverse=True)
+
+    # sort first by column 2, then by column 3
+    results.sort(key=lambda x: (x[2], x[3]), reverse=True)
+                 
     return results
 
 def historical_return_best_dates_by_pos_gain_ratio(instrument,
                                                    days_between):
     
     results = _historical_return_dates(instrument, days_between)
-    results.sort(key=lambda x: x[3], reverse=True)
+
+    # sort first by column 3, then by column 2
+    results.sort(key=lambda x: (x[3], x[2]), reverse=True)
+    
     return results
 
 def _print(results):
