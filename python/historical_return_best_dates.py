@@ -92,12 +92,11 @@ if __name__ == "__main__":
     parser.add_argument("--worst",
                         action="store_true",
                         help="Find the worst dates instead of the best dates")
-    topn_default = 10
     parser.add_argument("--topn",
                         metavar="N",
                         type=int,
-                        default=topn_default,
-                        help="Show the top N entires only. Default: " + str(topn_default))
+                        default=-1,
+                        help="Show the top N entires only")
     args = parser.parse_args()
     
     # get the instrument from the database
