@@ -78,6 +78,7 @@ if __name__ == "__main__":
     topn_default = 5
     parser.add_argument("--topn",
                         metavar="N",
+                        type=int,
                         default=topn_default,
                         help="Show the top N entires only. Default: " + str(topn_default))
     args = parser.parse_args()
