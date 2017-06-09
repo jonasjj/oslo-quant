@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument("--pos_gain",
                         action='store_true',
                         help="Sorted by number of years with positive gain")
-    topn_default = 5
+    topn_default = 10
     parser.add_argument("--topn",
                         metavar="N",
                         type=int,
