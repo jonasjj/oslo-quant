@@ -85,6 +85,9 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         pl.h_line = h_line
         pl.event_line = event_line
 
+        # hide meaningless x-axis ticks
+        pl.getAxis('bottom').setTicks([])
+
     def remove_plot(self, plot_title):
         pl = self.plots.pop(plot_title)
         self.removeItem(pl)
