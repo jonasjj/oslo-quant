@@ -95,25 +95,27 @@ if __name__ == "__main__":
 
     # run the algorithm
     res = historical_return_dates(instrument, args.days_between)
+
+    # get the result lists
+    avg_gain_list = res['avg_gain_ratio']
+    pos_gain_list = res['pos_gain_ratio']
     
-    if args.avg_gain:
-        l = res['avg_gain_ratio']
+    # Determinte whether to present the best or the worst days
+    if args.worst:
+
+        best_or_worst_string = "Worst"
+
+        # show the worst days at the top of the list [0]
+        avg_gain_list.reverse()
+        pos_gain_list.reverse()
+
+    else:
+        best_or_worst_string = "Best"
         
-        if args.worst:
-            l.reverse()
-            print("\nWorst dates sorted by average gain")
-        else:
-            print("\nBest dates sorted by average gain")
-            
-        _print(l[:args.topn -1])
+    if args.avg_gain:
+        print("\n%s dates sorted by average gain" % best_or_worst_string)            
+        _print(avg_gain_list[:args.topn -1])
             
     if args.pos_gain:
-        l = res['pos_gain_ratio']
-        
-        if args.worst:
-            l.reverse()
-            print("\nWorst dates sorted by change of positive gain gain")
-        else:
-            print("\nBest dates sorted by change of positive gain gain")
-            
-        _print(l[:args.topn -1])
+        print("\n%s dates sorted by change of positive gain gain" % best_or_worst_string)
+        _print(pos_gain_list[:args.topn -1])
