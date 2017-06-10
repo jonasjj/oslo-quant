@@ -3,7 +3,7 @@
 import os
 import gzip
 from urllib.request import urlopen
-from datetime import datetime
+import datetime
 import progressbar
 import numpy as np
 import pickle
@@ -1015,7 +1015,7 @@ class OsloBors(object):
                  low_price, close_price, volume, value) = line.split(";")
                 
                 # parse row items
-                date = datetime.strptime(date, '%Y%m%d').timestamp()
+                date = datetime.datetime.strptime(date, '%Y%m%d').timestamp()
                 open_price = float(open_price)
                 high_price = float(high_price)          
                 low_price = float(low_price)

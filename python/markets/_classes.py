@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import numpy as np
 
 """
@@ -15,23 +15,23 @@ class Instrument(object):
     def __repr__(self):
         return self.name
 
-    def get_first_timestamp(self):
+    def get_first_date(self):
         """
         Get the first data item for this instrument
         
         Return:
-           datetime.datetime
+           datetime.date
         """
-        return datetime.fromtimestamp(self.data[0]['date'])
+        return datetime.date.fromtimestamp(self.data[0]['date'])
 
-    def get_last_timestamp(self):
+    def get_last_date(self):
         """
         Get the last data item for this instrument
         
         Return:
-           datetime.datetime
+           datetime.date
         """
-        return datetime.fromtimestamp(self.data[-1]['date'])
+        return datetime.date.fromtimestamp(self.data[-1]['date'])
 
     def _get_row(self, index):
         """
@@ -50,8 +50,8 @@ class Instrument(object):
         column_names = self.data.dtype.names
         d = dict(zip(column_names, row_values))
         
-        # translate timestamp date to datetime
-        d['date'] = datetime.fromtimestamp(d['date'])
+        # translate timestamp date to datetime.date
+        d['date'] = datetime.date.fromtimestamp(d['date'])
 
         return d
 
@@ -59,14 +59,20 @@ class Instrument(object):
         """
         Get the data for a specific date.
         
+        Args:
+           date (datetime.date)
+
         Return:
            Dict containing data for this date
 
         Raises:
            KeyError if there is no data for this date
         """
+        # convert to timestamp
+        timestamp = datetime.datetime(date.year, date.month, date.day).timestamp()
+        
         # get matching rows
-        matches = np.where(self.data['date'] == date.timestamp())[0]
+        matches = np.where(self.data['date'] == timestamp)[0]
         match_count = len(matches)
 
         # no matching rows
@@ -89,14 +95,20 @@ class Instrument(object):
         """
         Get the data for the first date after
         
+        Args:
+           date (datetime.date)
+
         Return:
            Dict containing data for this or the next day with available data
 
         Raises:
            KeyError if there is no data for this or later dates
         """
+        # convert to timestamp
+        timestamp = datetime.datetime(date.year, date.month, date.day).timestamp()
+        
         # get matching rows
-        matches = np.where(self.data['date'] >= date.timestamp())[0]
+        matches = np.where(self.data['date'] >= timestamp)[0]
         match_count = len(matches)
 
         # no matching rows
@@ -112,14 +124,20 @@ class Instrument(object):
         """
         Get the data for the first date before
         
+        Args:
+           date (datetime.date)
+
         Return:
            Dict containing data for this or the last day with available data
 
         Raises:
            KeyError if there is no data for this or previous dates
         """
+        # convert to timestamp
+        timestamp = datetime.datetime(date.year, date.month, date.day).timestamp()
+        
         # get matching rows
-        matches = np.where(self.data['date'] <= date.timestamp())[0]
+        matches = np.where(self.data['date'] <= timestamp)[0]
         match_count = len(matches)
 
         # no matching rows

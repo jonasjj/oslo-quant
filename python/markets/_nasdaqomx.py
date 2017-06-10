@@ -7,7 +7,7 @@ from urllib.request import urlopen
 import shutil
 import subprocess
 import tempfile
-from datetime import datetime
+import datetime
 import numpy as np
 
 from markets._classes import Index
@@ -134,7 +134,7 @@ class NasdaqOmx(object):
             date, value, net_change, high, low = line.split(";")
 
             # parse row items
-            date = datetime.strptime(date, '%d.%m.%Y').timestamp()
+            date = datetime.datetime.strptime(date, '%d.%m.%Y').timestamp()
             value = float(value)
             net_change = float(net_change)
             high = float(high)

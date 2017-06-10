@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime, timedelta
+import datetime
 from tabulate import tabulate
 
 from markets import get_instrument
@@ -23,7 +23,7 @@ def historical_return_dates(instrument, days_between):
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..]}
     """
     year = 2017
-    date = datetime(year, 1, 1)
+    date = datetime.date(year, 1, 1)
 
     results = []
     
@@ -31,7 +31,7 @@ def historical_return_dates(instrument, days_between):
     while date.year == year:
 
         buy_date = date
-        sell_date = buy_date + timedelta(days=days_between)
+        sell_date = buy_date + datetime.timedelta(days=days_between)
 
         d = historical_return_from_to_date(instrument, buy_date, sell_date)
 
@@ -39,7 +39,7 @@ def historical_return_dates(instrument, days_between):
                         sell_date,
                         d['avg_gain_ratio'], d['pos_gain_ratio']))
         
-        date += timedelta(days=1)
+        date += datetime.timedelta(days=1)
 
     # sort by column a, then by column b
     avg_gain_list = sorted(results, key=lambda x: (x[2], x[3]), reverse=True)
@@ -58,8 +58,8 @@ def _print(results):
     decimals = 4
 
     for r in results:
-        tab_list.append((r[0].strftime("%Y-%m-%d"),
-                         r[1].strftime("%Y-%m-%d"),
+        tab_list.append((str(r[0]),
+                         str(r[1]),
                          str(round(r[2], decimals)),
                          str(round(r[3], decimals))))
 

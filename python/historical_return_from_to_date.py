@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import argparse
 from pprint import pprint
 from collections import OrderedDict
@@ -14,9 +14,9 @@ def parse_date(date_str):
         ValueError on error
 
     Return:
-        datetime.datetime object
+        datetime.date object
     """
-    return datetime.strptime(date_str, "%Y-%m-%d")
+    return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
 def historical_return_from_to_date(instrument, buy_date, sell_date):
 
@@ -24,8 +24,8 @@ def historical_return_from_to_date(instrument, buy_date, sell_date):
         raise ValueError("Sell date is before buy date")
     
     # get the first and last timestamp in the available data
-    first_timestamp = instrument.get_first_timestamp()
-    last_timestamp = instrument.get_last_timestamp()
+    first_date = instrument.get_first_date()
+    last_date = instrument.get_last_date()
 
     # estimate days
     days = (sell_date - buy_date).days
@@ -33,17 +33,17 @@ def historical_return_from_to_date(instrument, buy_date, sell_date):
     # rewind to the first available buy date
     _buy_date = buy_date
     _sell_date = sell_date
-    while _buy_date > first_timestamp:
+    while _buy_date > first_date:
 
         # decrement by 1 year
-        _buy_date = datetime(_buy_date.year - 1, _buy_date.month, _buy_date.day)
-        _sell_date = datetime(_sell_date.year - 1, _sell_date.month, _sell_date.day)
+        _buy_date = _buy_date.replace(year=_buy_date.year - 1)
+        _sell_date =  _sell_date.replace(year=_sell_date.year - 1)
 
     # this is the first possible starting point
-    _buy_date = datetime(_buy_date.year + 1, _buy_date.month, _buy_date.day)
-    _sell_date = datetime(_sell_date.year + 1, _sell_date.month, _sell_date.day)
+    _buy_date = _buy_date.replace(year=_buy_date.year + 1)
+    _sell_date = _sell_date.replace(year=_sell_date.year + 1)
 
-    if _buy_date < first_timestamp or _sell_date > last_timestamp:
+    if _buy_date < first_date or _sell_date > last_date:
         raise KeyError("Not enough data")
     
     trades = []
@@ -62,7 +62,7 @@ def historical_return_from_to_date(instrument, buy_date, sell_date):
         value_key = 'value'
         
     
-    while _sell_date <= last_timestamp:
+    while _sell_date <= last_date:
         year_count += 1
 
         buy = instrument.get_day_or_first_after(_buy_date)
@@ -91,8 +91,8 @@ def historical_return_from_to_date(instrument, buy_date, sell_date):
         trades.append(trade)
 
         # increment by 1 year
-        _buy_date = datetime(_buy_date.year + 1, _buy_date.month, _buy_date.day)
-        _sell_date = datetime(_sell_date.year + 1, _sell_date.month, _sell_date.day)
+        _buy_date = _buy_date.replace(year=_buy_date.year + 1)
+        _sell_date = _sell_date.replace(year=_sell_date.year + 1)
 
     if year_count == 0:
         raise ValueError("There are no historical trades for these dates")
