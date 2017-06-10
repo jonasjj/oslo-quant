@@ -100,7 +100,7 @@ if __name__ == "__main__":
     avg_gain_list = res['avg_gain_ratio']
     pos_gain_list = res['pos_gain_ratio']
     
-    # Determinte whether to present the best or the worst days
+    # Determine whether to present the best or the worst days
     if args.worst:
 
         best_or_worst_string = "Worst"
