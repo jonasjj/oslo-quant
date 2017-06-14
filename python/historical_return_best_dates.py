@@ -50,6 +50,11 @@ def historical_return_dates(instrument, days_between):
     
     return d
 
+def historical_return_weeks(instrument, days_between):
+    best_days = historical_return_dates(instrument, days_between)
+
+    
+
 def _print(results):
     """Print a tabulated list"""
 
@@ -88,6 +93,14 @@ if __name__ == "__main__":
                         type=int,
                         default=-1,
                         help="Show the top N entires only")
+    parser.add_argument("--avg",
+                        metavar="N",
+                        type=int,
+                        default=1,
+                        help="Moving average with N values")
+    parser.add_argument("--plot",
+                        action="store_true",
+                        help="Plot the results")
     args = parser.parse_args()
     
     # get the instrument from the database
