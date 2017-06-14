@@ -50,11 +50,6 @@ def historical_return_dates(instrument, days_between):
     
     return d
 
-def historical_return_weeks(instrument, days_between):
-    best_days = historical_return_dates(instrument, days_between)
-
-    
-
 def _print(results):
     """Print a tabulated list"""
 
