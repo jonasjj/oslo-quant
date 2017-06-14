@@ -121,7 +121,7 @@ if __name__ == "__main__":
     parser.add_argument("days_between", type=int, help="Days between buy and sell")
     parser.add_argument("--avg_gain",
                         action='store_true',
-                        help="Sorted by average gain ratio per year")
+                        help="Sorted by average gain ratio")
     parser.add_argument("--pos_gain",
                         action='store_true',
                         help="Sorted by number of years with positive gain")
@@ -172,3 +172,44 @@ if __name__ == "__main__":
     if args.pos_gain:
         print("\n%s dates sorted by change of positive gain gain" % best_or_worst_string)
         _print(pos_gain_list[:args.topn -1])
+
+    if args.plot:
+        import numpy as np
+        from plotting import linked_plot
+
+        # create empty numpy matrix with room for all values
+        matrix = np.zeros(shape=len(res['days']),
+                          dtype=[('date', 'f8'),
+                                 ('avg_gain', 'f8'),
+                                 ('pos_gain', 'f8')])
+                        
+        # construct numpy matrix
+        for i,day in enumerate(res['days']):
+            date, _, avg_gain, pos_gain = day
+
+            # convert to Unix timestamp
+            dt = datetime.datetime(date.year, date.month, date.day)
+            timestamp = dt.timestamp()
+            
+            matrix[i] = timestamp, avg_gain, pos_gain
+
+        plot_inputs = []
+
+        # string for plot titles
+        if args.avg == 1:
+            average_days_string = ""
+        else:
+            average_days_string = " (moving average days: %d)" % args.avg
+
+        # add average gain ratio to ploit
+        if args.avg_gain:
+            plot_inputs.append((matrix, 'avg_gain',
+                                'Average gain ratio for ' + instrument.name + average_days_string))
+
+        # add positive gain ratio to plot
+        if args.pos_gain:
+            plot_inputs.append((matrix, 'pos_gain',
+                                'Positive gain ratio for ' + instrument.name + average_days_string))
+
+        # create the plot
+        linked_plot(plot_inputs)
