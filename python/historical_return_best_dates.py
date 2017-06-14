@@ -8,15 +8,17 @@ from historical_return_from_to_date import historical_return_from_to_date
 def historical_return_dates(instrument,
                             days_between,
                             first_date=datetime.date(2017,1,2),
-                            last_date=datetime.date(2017,12,31)):
+                            last_date=datetime.date(2017,12,31),
+                            average_days=1):
     """"
     Find the historically best dates to buy and sell
     
     Args:
         instrument (markets.Instrument): Instrument to use in check
         days_between (int): Approximate number of days between buy and sell
-        first_date (datetime.date): first date to check
-        last_date (datetime.date): last date to check
+        first_date (datetime.date): First date to check
+        last_date (datetime.date): Last date to check
+        average_days (int): Moving average over N days
 
     Return:
         dict with two lists sorted on average gain ratio
@@ -27,25 +29,58 @@ def historical_return_dates(instrument,
              'pos_gain':
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..]}
     """
-    date = first_date
+    tmp_results = []
 
-    results = []
+    # find out how many days before and after each date we need
+    # to implement calculate the moving average
+    before_days = int((average_days - 1) / 2)
+    after_days = int(average_days - before_days - 1)
     
-    # loop through all the days in one year
-    while date < last_date:
+    date = first_date - datetime.timedelta(days=before_days)
+
+    # loop through all the days in the time range
+    while date < last_date + datetime.timedelta(days=after_days):
 
         buy_date = date
         sell_date = buy_date + datetime.timedelta(days=days_between)
 
         d = historical_return_from_to_date(instrument, buy_date, sell_date)
 
-        results.append((buy_date,
-                        sell_date,
-                        d['avg_gain_ratio'],
-                        d['pos_gain_ratio']))
+        tmp_results.append((buy_date,
+                            sell_date,
+                            d['avg_gain_ratio'],
+                            d['pos_gain_ratio']))
         
         date += datetime.timedelta(days=1)
 
+
+    # calculate the moving average for all days
+    results = []
+    for i in range(len(tmp_results) - before_days - after_days):
+
+        # find the index of this day within tmp_results
+        index = i + before_days
+
+        # find the buy/sell dates for this date
+        buy_date, sell_date, _, _ = tmp_results[index]
+
+        # calculate the moving average values for this day
+        acc_avg_gain_ratio = 0
+        acc_pos_gain_ratio = 0
+        for j in range(index - before_days, index + after_days + 1):
+           _, _, avg_gain_ratio, pos_gain_ratio = tmp_results[j]
+           acc_avg_gain_ratio += avg_gain_ratio
+           acc_pos_gain_ratio += pos_gain_ratio
+
+        day_count = before_days + after_days + 1
+
+        t = (buy_date,
+             sell_date,
+             acc_avg_gain_ratio / day_count,
+             acc_pos_gain_ratio / day_count)
+             
+        results.append(t)
+        
     # sort by column a, then by column b
     avg_gain_list = sorted(results, key=lambda x: (x[2], x[3]), reverse=True)
     pos_gain_list = sorted(results, key=lambda x: (x[3], x[2]), reverse=True)
