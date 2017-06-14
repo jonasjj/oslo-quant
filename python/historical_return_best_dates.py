@@ -5,13 +5,18 @@ from tabulate import tabulate
 from markets import get_instrument
 from historical_return_from_to_date import historical_return_from_to_date
 
-def historical_return_dates(instrument, days_between):
+def historical_return_dates(instrument,
+                            days_between,
+                            first_date=datetime.date(2017,1,2),
+                            last_date=datetime.date(2017,12,31)):
     """"
     Find the historically best dates to buy and sell
     
     Args:
         instrument (markets.Instrument): Instrument to use in check
         days_between (int): Approximate number of days between buy and sell
+        first_date (datetime.date): first date to check
+        last_date (datetime.date): last date to check
 
     Return:
         dict with two lists sorted on average gain ratio
@@ -22,13 +27,12 @@ def historical_return_dates(instrument, days_between):
              'pos_gain':
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..]}
     """
-    year = 2017
-    date = datetime.date(year, 1, 1)
+    date = first_date
 
     results = []
     
     # loop through all the days in one year
-    while date.year == year:
+    while date < last_date:
 
         buy_date = date
         sell_date = buy_date + datetime.timedelta(days=days_between)
@@ -37,7 +41,8 @@ def historical_return_dates(instrument, days_between):
 
         results.append((buy_date,
                         sell_date,
-                        d['avg_gain_ratio'], d['pos_gain_ratio']))
+                        d['avg_gain_ratio'],
+                        d['pos_gain_ratio']))
         
         date += datetime.timedelta(days=1)
 
