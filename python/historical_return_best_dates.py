@@ -39,7 +39,7 @@ def historical_return_dates(instrument,
     date = first_date - datetime.timedelta(days=before_days)
 
     # loop through all the days in the time range
-    while date < last_date + datetime.timedelta(days=after_days):
+    while date <= last_date + datetime.timedelta(days=after_days):
 
         buy_date = date
         sell_date = buy_date + datetime.timedelta(days=days_between)
@@ -142,8 +142,8 @@ if __name__ == "__main__":
     instrument = get_instrument(args.instrument.upper())
 
     # run the algorithm
-    res = historical_return_dates(instrument, args.days_between)
-
+    res = historical_return_dates(instrument, args.days_between, average_days=args.avg)
+    
     # get the result lists
     avg_gain_list = res['avg_gain_ratio']
     pos_gain_list = res['pos_gain_ratio']
