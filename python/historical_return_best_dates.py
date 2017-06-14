@@ -21,10 +21,14 @@ def historical_return_dates(instrument,
         average_days (int): Moving average over N days
 
     Return:
-        dict with two lists sorted on average gain ratio
-        and change of positive gain ratio:
+        dict with three list:
+           - sorted by date
+           - sorted by average gain ratio
+           - sorted by change of positive gain ratio:
 
-            {'avg_gain_ratio': 
+            {'days':
+                [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..],
+             'avg_gain_ratio': 
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..],
              'pos_gain':
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..]}
@@ -85,7 +89,8 @@ def historical_return_dates(instrument,
     avg_gain_list = sorted(results, key=lambda x: (x[2], x[3]), reverse=True)
     pos_gain_list = sorted(results, key=lambda x: (x[3], x[2]), reverse=True)
     
-    d = {'avg_gain_ratio': avg_gain_list,
+    d = {'days': results,
+         'avg_gain_ratio': avg_gain_list,
          'pos_gain_ratio': pos_gain_list}
     
     return d
