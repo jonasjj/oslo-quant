@@ -57,6 +57,8 @@ def historical_return_dates(instrument,
         
         date += datetime.timedelta(days=1)
 
+    # store year count of the source data
+    year_count = d['year_count']
 
     # calculate the moving average for all days
     results = []
@@ -90,6 +92,7 @@ def historical_return_dates(instrument,
     pos_gain_list = sorted(results, key=lambda x: (x[3], x[2]), reverse=True)
     
     d = {'days': results,
+         'year_count': year_count,
          'avg_gain_ratio': avg_gain_list,
          'pos_gain_ratio': pos_gain_list}
     
@@ -204,12 +207,15 @@ if __name__ == "__main__":
         # add average gain ratio to ploit
         if args.avg_gain:
             plot_inputs.append((matrix, 'avg_gain',
-                                'Average gain ratio for ' + instrument.name + average_days_string))
+                                "Average gain ratio for " +
+                                instrument.name + average_days_string +
+                                ", years averaged: " + str(res['year_count'])))
 
         # add positive gain ratio to plot
         if args.pos_gain:
             plot_inputs.append((matrix, 'pos_gain',
-                                'Positive gain ratio for ' + instrument.name + average_days_string))
+                                "Positive gain ratio for " +
+                                ", years averaged: " + str(res['year_count'])))
 
         # create the plot
         linked_plot(plot_inputs)
