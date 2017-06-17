@@ -4,7 +4,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 from setproctitle import setproctitle
 import datetime
-from numpy.linalg import LinAlgError
+import numpy as np
 
 class LinkedPlotWidget(pg.GraphicsLayoutWidget):
     """Widget for stacking several plots with linked x-axes vertically"""
@@ -24,7 +24,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         self.setWindowTitle(window_title)
 
         # label for showing y/x values for crosshair
-        self.label = pg.LabelItem(justify='right')
+        self.label = pg.LabelItem(justify='left')
         self.label.setVisible(True)
         self.addItem(self.label)
 
@@ -43,7 +43,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         for numpy_array, data_column_name, plot_title in inputs:
             self.add_plot(numpy_array, data_column_name, plot_title)
 
-        self.show()
+            self.show()
 
     def add_plot(self, numpy_array, data_column_name, plot_title):
         """
@@ -52,6 +52,10 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         args:
            It is assumed that numpy_array['date'] exists.
         """
+        # if the plot title already exists
+        if plot_title in self.plots:
+            raise Exception("The plot title '%s' already exists" % plot_title)
+        
         pl = self.addPlot(row=self.plot_row_counter, col=0, title=plot_title,
                           y=numpy_array[data_column_name], x=numpy_array['date'])
         self.plots[plot_title] = pl
@@ -85,9 +89,16 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         pl.h_line = h_line
         pl.event_line = event_line
 
+        # the text responsible for showing the y value where the vertival line is
+        value_text = pg.TextItem(anchor=(0.5,0))
+        value_text.setPos(92,0)
+        pl.addItem(value_text)
+        value_text.setParentItem(pl)
+        pl.value_text = value_text
+
         # hide meaningless x-axis ticks
         pl.getAxis('bottom').setTicks([])
-
+        
     def remove_plot(self, plot_title):
         pl = self.plots.pop(plot_title)
         self.removeItem(pl)
@@ -121,9 +132,10 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
     def update_label(self, cursor_x, cursor_y):
         """Change the labels. Arguments are floats"""
         timestamp = datetime.date.fromtimestamp(cursor_x)
-        timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        text = "<span style='color: Aqua'>x=%s</span>, " \
-               "<span style='color: GreenYellow'>x=%0.1f</span>" % (timestamp_str, cursor_y)
+        timestamp_str = timestamp.strftime("%Y-%m-%d")
+        text = "<span>crosshair</span>: " \
+               "<span style='color: Aqua'>x=%s</span>, " \
+               "<span style='color: GreenYellow'>y=%0.1f</span>" % (timestamp_str, cursor_y)
         self.label.setText(text)
 
     def hide_label(self):
@@ -141,7 +153,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
             try:
                 mousePoint = pl.vb.mapSceneToView(pos)
-            except LinAlgError:
+            except np.linalg.LinAlgError:
                 # probably, the plot was replaced, causing this error
                 return
 
@@ -161,8 +173,49 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         if mouse_is_over_a_plot:
             for pl in self.plots.values():
                 pl.v_line.setVisible(True)
+                
+                # get the x position of the vertical crosshair line
+                x_mouse = mousePoint.x()
+
+                # get the numpy arrays containing the x and y data for this plot
+                ld = pl.listDataItems()[0]
+                data = ld.getData()
+                x_data = data[0]
+                y_data = data[1]
+
+                # get the index containing the nearest timestamp value for this x position
+                x_index = (np.abs(x_data - x_mouse)).argmin()
+
+                # if the x index is at the min position
+                if x_index == 0:
+
+                    # hide the text if the x position outside of the plot
+                    if x_mouse < x_data[0]:
+                        pl.value_text.setText("")
+
+                # if the x index is at the max position
+                elif x_index == len(x_data) - 1:
+
+                    # hide the text if the x position outside of the plot
+                    if x_mouse > x_data[-1]:
+                        pl.value_text.setText("")
+
+                # if the x position is within the plot
+                else:
+                    # get the y value
+                    y = y_data[x_index]
+                
+                    # set the y value at the vertical line on this plot at the x position
+                    text = "<span style='color: GreenYellow'>y=%0.1f</span>" % y
+                    pl.value_text.setHtml(text)
+                
         else:
+            # hide the crosshair text
             self.hide_label()
+
+            # hide the plot y value text
+            for pl in self.plots.values():
+                pl.value_text.setText("")
 
     def eventFilter(self, widget, event):
         # if the mouse pointer exits the widget
