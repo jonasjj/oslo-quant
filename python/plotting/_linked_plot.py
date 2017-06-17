@@ -109,13 +109,14 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             self.remove_plot(pl_title)
         self.first_plot = None
 
-    def add_marker(self, plot_title, date):
+    def add_marker(self, plot_title, date, angle=-90, text=""):
         """
         Add a marker to a plot
         
         Args:
            plot_title (str): The plot title to add a marker to
            date (datetime.date): x-axis date to add a marker to
+           angle (int): Angle of the arrow marker. -90 is top down.
 
         Raises:
            IndexError: If the date isn't present in the data set
@@ -137,14 +138,40 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             raise Exception("There are more than one x index containing this timestamp")
 
         elif len(matches) < 1:
-            raise IndexError("The timestamp " + str(date) + " wasn't fount in the data set")
+            raise IndexError("The timestamp " + str(date) + " wasn't found in the data set")
 
         else:
             x_index = matches[0]
-        
+
+        # a curvepoint refers to an xy point on the plot line
         curvePoint = pg.CurvePoint(ld, index=x_index)
-        arrow = pg.ArrowItem(angle=-90)
+
+        # create an arrow
+        arrow = pg.ArrowItem(angle=angle)
         arrow.setParentItem(curvePoint)
+
+        if text != "":
+
+            # Adjust the y anchor point to the number of lines in the text box.
+            # I don't know how to so this properly.
+            anchor_y = 2
+            
+            # split into <span> tags
+            spans = []
+            for line in text.split("\n"):
+                spans.append('<span style="color: #FF0; font-size: 14pt;">%s</span>' % line)
+
+                # this is a magic number gained through trial an error
+                # for spacing the marker and the text box slightly apart
+                anchor_y = (anchor_y - 0.062) / 1.066
+
+            # create html text box
+            html = '<div style="text-align: center">%s</div>' % "<br>".join(spans)
+
+            # create the text box and attach it to the curve point
+            text = pg.TextItem(html=html, anchor=(0.5,anchor_y), border='w', fill=(0, 0, 255, 100))
+            text.setParentItem(curvePoint)
+
         pl.addItem(curvePoint)
 
     def leaveEvent(self, event):
