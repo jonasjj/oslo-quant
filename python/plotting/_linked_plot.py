@@ -5,6 +5,7 @@ import pyqtgraph as pg
 from setproctitle import setproctitle
 import datetime
 import numpy as np
+import signal
 
 class LinkedPlotWidget(pg.GraphicsLayoutWidget):
     """Widget for stacking several plots with linked x-axes vertically"""
@@ -245,4 +246,8 @@ def linked_plot(inputs, window_title=''):
     setproctitle("nordnetbot-linkedplot")
     app = QApplication(sys.argv)
     lw = LinkedPlotWidget(inputs, window_title)
+
+    # install signal handler
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
     sys.exit(app.exec_())
