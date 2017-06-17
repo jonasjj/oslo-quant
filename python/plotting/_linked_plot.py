@@ -151,22 +151,29 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         arrow.setParentItem(curvePoint)
 
         if text != "":
-
-            # Adjust the y anchor point to the number of lines in the text box.
-            # I don't know how to so this properly.
-            anchor_y = 2
             
             # split into <span> tags
             spans = []
             for line in text.split("\n"):
                 spans.append('<span style="color: #FF0; font-size: 14pt;">%s</span>' % line)
 
-                # this is a magic number gained through trial an error
-                # for spacing the marker and the text box slightly apart
-                anchor_y = (anchor_y - 0.062) / 1.066
-
             # create html text box
             html = '<div style="text-align: center">%s</div>' % "<br>".join(spans)
+
+            # Adjust the y anchor point to the number of lines in the text box.
+            # I don't know how to so this properly.
+            if len(spans) == 1:
+                anchor_y = 1.8
+            elif len(spans) == 2:
+                anchor_y = 1.45
+            elif len(spans) == 3:
+                anchor_y = 1.32
+            elif len(spans) == 4:
+                anchor_y = 1.25
+            elif len(spans) == 5:
+                anchor_y = 1.2
+            else:
+                raise Exception("%d line count text box isn't implemented")
 
             # create the text box and attach it to the curve point
             text = pg.TextItem(html=html, anchor=(0.5,anchor_y), border='w', fill=(0, 0, 255, 100))
