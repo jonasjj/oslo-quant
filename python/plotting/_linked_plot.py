@@ -46,8 +46,6 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
             self.show()
 
-        self.add_marker("STL_close", datetime.date(2017,1,2))
-        
     def add_plot(self, numpy_array, data_column_name, plot_title):
         """
         Replace plots with new data
