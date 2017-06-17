@@ -109,7 +109,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             self.remove_plot(pl_title)
         self.first_plot = None
 
-    def add_marker(self, plot_title, date, angle=-90, text=""):
+    def add_marker(self, plot_title, date, angle=-90, text="", color='blue'):
         """
         Add a marker to a plot
         
@@ -117,6 +117,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
            plot_title (str): The plot title to add a marker to
            date (datetime.date): x-axis date to add a marker to
            angle (int): Angle of the arrow marker. -90 is top down.
+           color (str): 'blue', 'green', or 'red'
 
         Raises:
            IndexError: If the date isn't present in the data set
@@ -146,8 +147,18 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         # a curvepoint refers to an xy point on the plot line
         curvePoint = pg.CurvePoint(ld, index=x_index)
 
+        # background color
+        if color == 'blue':
+            brush = (0, 0, 255, 110) # blue
+        elif color == 'green':
+            brush = (0, 255, 0, 110) # green
+        elif color == 'red':
+            brush = (255, 0, 0, 150) # red
+        else:
+            raise Exception("Color '%s' isn't implemented" % color)
+
         # create an arrow
-        arrow = pg.ArrowItem(angle=angle)
+        arrow = pg.ArrowItem(angle=angle, brush=brush)
         arrow.setParentItem(curvePoint)
 
         if text != "":
@@ -173,10 +184,10 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             elif len(spans) == 5:
                 anchor_y = 1.2
             else:
-                raise Exception("%d line count text box isn't implemented")
+                raise Exception("%d line count text box isn't implemented" % anchor_y)
 
             # create the text box and attach it to the curve point
-            text = pg.TextItem(html=html, anchor=(0.5,anchor_y), border='w', fill=(0, 0, 255, 100))
+            text = pg.TextItem(html=html, anchor=(0.5,anchor_y), border='w', fill=brush)
             text.setParentItem(curvePoint)
 
         pl.addItem(curvePoint)
