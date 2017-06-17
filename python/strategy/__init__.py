@@ -1,1 +1,1 @@
-from strategy._classes import Strategy
+from strategy._classes import Strategy, Order
