@@ -46,6 +46,8 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
             self.show()
 
+        self.add_marker("STL_close", datetime.date(2017,1,2))
+        
     def add_plot(self, numpy_array, data_column_name, plot_title):
         """
         Replace plots with new data
@@ -99,7 +101,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
         # hide meaningless x-axis ticks
         pl.getAxis('bottom').setTicks([])
-        
+
     def remove_plot(self, plot_title):
         pl = self.plots.pop(plot_title)
         self.removeItem(pl)
@@ -108,6 +110,44 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         for pl_title in list(self.plots):
             self.remove_plot(pl_title)
         self.first_plot = None
+
+    def add_marker(self, plot_title, date):
+        """
+        Add a marker to a plot
+        
+        Args:
+           plot_title (str): The plot title to add a marker to
+           date (datetime.date): x-axis date to add a marker to
+
+        Raises:
+           IndexError: If the date isn't present in the data set
+        """        
+        # get the plot
+        pl = self.plots[plot_title]
+
+        # convert date to timestamp
+        timestamp = datetime.datetime(date.year, date.month, date.day).timestamp()
+
+        ld = pl.listDataItems()[0]
+        
+        # get the index containing the nearest timestamp value for this x position
+        x_data = ld.getData()[0]
+        matches = np.where(x_data == timestamp)[0]
+
+        # if this happens, there is something wrong with the data
+        if len(matches) > 1:
+            raise Exception("There are more than one x index containing this timestamp")
+
+        elif len(matches) < 1:
+            raise IndexError("The timestamp " + str(date) + " wasn't fount in the data set")
+
+        else:
+            x_index = matches[0]
+        
+        curvePoint = pg.CurvePoint(ld, index=x_index)
+        arrow = pg.ArrowItem(angle=-90)
+        arrow.setParentItem(curvePoint)
+        pl.addItem(curvePoint)
 
     def leaveEvent(self, event):
         """Called when the mouse leaves this widget"""
