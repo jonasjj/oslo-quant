@@ -16,8 +16,33 @@ class Order(object):
         self.price = price
         self.quantity = quantity
 
-class Strategy(metaclass=ABCMeta):
+class Share(object):
+    """A share holding position"""
+
+    def __init__(self, instrument, quantity, cost=None):
+        """
+        Args:
+           instrument (markets._classes.Instrument): The instrument
+           quantity (int): The number of shares (negative for short)
+           cost (float): Optional acquisition cost
+        """
+        self.instrument = instrument
+        self.quantity = quantity
+        self.cost = cost    
+        
+class Strategy(object, metaclass=ABCMeta):
     """Base class for all strategies"""
+
+    @abstractmethod
+    def __init__(self, portfolio=[]):
+        """
+        Override this method and call super()
+
+        Args:
+           portfolio: List of Share objects represening
+                      the intital share holding positions
+        """
+        self.portfolio = portfolio
 
     @abstractmethod
     def execute(self, today):
