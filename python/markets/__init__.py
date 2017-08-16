@@ -1,5 +1,7 @@
+import os
+
 # dir to store downloaded data in
-DATA_DIR = "/home/jonas/quant/data"
+DATA_DIR = os.path.normpath(os.path.dirname(__file__) + "/../../data")
 
 # path to a pickled instances
 OSLOBORS_PICKLE_PATH = DATA_DIR + "/oslobors.p"
