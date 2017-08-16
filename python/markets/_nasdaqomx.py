@@ -99,8 +99,9 @@ class NasdaqOmx(object):
         # copy file to temp dir
         shutil.copyfile(file_path, temp_file_path)
 
-        # convert to semicolon-separated CSV file using shell command 'unoconv'
-        cmd = 'unoconv -e FilterOptions="59,34,0,1" -f csv ' + temp_file_path
+        # Convert to semicolon-separated CSV file using shell command 'unoconv'
+        # Use C lang locale to get the thousands separators and date formats correct
+        cmd = 'LC_ALL=C unoconv -e FilterOptions="59,34,0,1" -f csv ' + temp_file_path
         subprocess.run(cmd,
                        shell=True, check=True,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -115,11 +116,8 @@ class NasdaqOmx(object):
             # files sometimes contain this character as space
             data = data.replace(u'\xa0','')
 
-            # replace comma with point
-            data = data.replace(',', '.')
-
-            # remove spaces. numbers are like: "1 615,26913657638"
-            data = data.replace(' ', '')
+            # remove thousand separator commas
+            data = data.replace(',', '')
 
             # split into list of lines
             lines = data.strip().split("\n")
@@ -133,8 +131,7 @@ class NasdaqOmx(object):
             # unpack the cells from this row
             date, value, net_change, high, low = line.split(";")
 
-            # parse row items
-            date = datetime.datetime.strptime(date, '%d.%m.%Y').timestamp()
+            date = datetime.datetime.strptime(date, '%m/%d/%Y').timestamp()
             value = float(value)
             net_change = float(net_change)
             high = float(high)
