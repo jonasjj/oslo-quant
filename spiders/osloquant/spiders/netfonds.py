@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
-
+import numpy as np
+import datetime
 
 class NetfondsSpider(scrapy.Spider):
     name = 'netfonds'
@@ -69,6 +70,40 @@ class NetfondsSpider(scrapy.Spider):
         # sanity check: check that the header row is as expected
         assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'
 
-        # TODO parse CSV data
+        # create an empty numpy matrix
+        matrix = np.zeros(shape=len(lines),
+                          dtype=[('date', 'f8'),
+                                 ('open', 'f8'),
+                                 ('high', 'f8'),
+                                 ('low', 'f8'),
+                                 ('close', 'f8'),
+                                 ('volume', 'i8'),
+                                 ('value', 'i8')])
 
-        self.log("Found " + ticker + " - " + name)
+        # fill in the matrix
+        for line_num, line in enumerate(lines):
+
+            try:
+                # unpack row items)
+                (date, paper, exchange, open_price, high_price,
+                 low_price, close_price, volume, value) = line.split(";")
+                
+                # parse row items
+                date = datetime.datetime.strptime(date, '%Y%m%d').timestamp()
+                open_price = float(open_price)
+                high_price = float(high_price)          
+                low_price = float(low_price)
+                close_price = float(close_price)
+                volume = float(volume)
+                value = float(value)
+                
+                matrix[line_num] = date, open_price, high_price, low_price, \
+                                   close_price, volume, value
+            except:
+                self.log.error("Failed to load file " + str(file_path) + " line " + \
+                               str(line_num) + "Line: \"" + str(line) + "\"")
+
+        # sort rows on time column, there has been some swapped samples detected in the source
+        matrix = np.sort(matrix, order='date')
+
+        # TODO: create an Instrument object from this
