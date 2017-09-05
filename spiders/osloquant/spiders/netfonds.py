@@ -28,8 +28,47 @@ class NetfondsSpider(scrapy.Spider):
                 ticker = row.css("a::text").extract_first()
                 url = row.css("a::attr(href)").extract_first()
 
-                self.log("Found " + ticker + " " + url)
+                # convert the relative URL to absolute 
+                absolute_url = response.urljoin(url)
+
+                # proceed to scrape the instrument page
+                yield scrapy.Request(url=absolute_url, callback=self.parse_instrument)
 
             else:
                 self.log.error("This table row contains neither td or th elements")
-                
+
+    def parse_instrument(self, response):
+
+        # Extract the ticker and market name from the end of the request URL.
+        # Typically: ttp://www.netfonds.no/quotes/ppaper.php?paper=AFG.OSE
+        ticker = response.url.split("?paper=")[1]
+
+        # the instrument full name is at the top of the menu table to the left
+        long_name = response.css(".hsidetable .helemselected a::text").extract_first()
+
+        # construct the download url for the semicolon separated CSV containing market data
+        url = "http://hopey.netfonds.no/paperhistory.php?paper=" + ticker + "&csv_format=sdv"
+
+        yield scrapy.Request(url=url,
+                             callback=self.parse_sdv,
+                             meta={'ticker': ticker, 'name': long_name})
+
+    def parse_sdv(self, response):
+
+        # unpack the meta-values passed from the previous request
+        ticker = response.meta['ticker']
+        name = response.meta['name']
+
+        # Split 
+        lines = response.text.strip().split("\n")
+
+        
+        # remove the first item, which is the column headers
+        header = lines.pop(0)
+
+        # sanity check: check that the header row is as expected
+        assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'
+
+        # TODO parse CSV data
+
+        self.log("Found " + ticker + " - " + name)
