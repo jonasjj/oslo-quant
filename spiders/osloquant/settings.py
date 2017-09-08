@@ -21,6 +21,9 @@ NEWSPIDER_MODULE = 'osloquant.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
+# Info shows only the name of the pages being scraped, not the content
+LOG_LEVEL='INFO'
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import numpy as np
 import datetime
 
 class NetfondsSpider(scrapy.Spider):
@@ -36,13 +35,13 @@ class NetfondsSpider(scrapy.Spider):
                 yield scrapy.Request(url=absolute_url, callback=self.parse_instrument)
 
             else:
-                self.log.error("This table row contains neither td or th elements")
+                self.logger.error("This table row contains neither td or th elements")
 
     def parse_instrument(self, response):
 
         # Extract the ticker and market name from the end of the request URL.
         # Typically: ttp://www.netfonds.no/quotes/ppaper.php?paper=AFG.OSE
-        ticker = response.url.split("?paper=")[1]
+        ticker = response.url.split("?paper=")[-1]
 
         # the instrument full name is at the top of the menu table to the left
         long_name = response.css(".hsidetable .helemselected a::text").extract_first()
@@ -68,19 +67,14 @@ class NetfondsSpider(scrapy.Spider):
         header = lines.pop(0)
 
         # sanity check: check that the header row is as expected
-        assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'
+        assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'        
+        
+        # the parsed data
+        ret = {'ticker': ticker,
+               'name ': name,
+               'data': {}}
 
-        # create an empty numpy matrix
-        matrix = np.zeros(shape=len(lines),
-                          dtype=[('date', 'f8'),
-                                 ('open', 'f8'),
-                                 ('high', 'f8'),
-                                 ('low', 'f8'),
-                                 ('close', 'f8'),
-                                 ('volume', 'i8'),
-                                 ('value', 'i8')])
-
-        # fill in the matrix
+        # fill in the data
         for line_num, line in enumerate(lines):
 
             try:
@@ -96,14 +90,21 @@ class NetfondsSpider(scrapy.Spider):
                 close_price = float(close_price)
                 volume = float(volume)
                 value = float(value)
+
+                # data row indexed by date
+                ret['data'][date] = {'date': date,
+                                     'open_price': open_price,
+                                     'high_price': high_price,
+                                     'low_price': low_price,
+                                     'close_price': close_price,
+                                     'volume': volume,
+                                     'value': value}
                 
-                matrix[line_num] = date, open_price, high_price, low_price, \
-                                   close_price, volume, value
             except:
-                self.log.error("Failed to load file " + str(file_path) + " line " + \
+                self.logger.error("Failed to parse  \"" + response.url + "\" line " + \
                                str(line_num) + "Line: \"" + str(line) + "\"")
 
-        # sort rows on time column, there has been some swapped samples detected in the source
-        matrix = np.sort(matrix, order='date')
-
-        # TODO: create an Instrument object from this
+        # print some info so that the user can see what's going on
+        self.logger.info("Scraped " + ticker)
+                
+        yield ret
