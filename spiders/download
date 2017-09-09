@@ -24,9 +24,23 @@ def download_oslobors():
     process = CrawlerProcess(get_project_settings())
     process.crawl(NetfondsSpider)
     process.start()
-    
+
 def download_nasdaqomx():
-    raise NotImplementedError
+
+    # this function will be called when the splash server is up and running
+    def splash_started(opts, stderr):
+        print("Splash stared")
+
+    from splash.server import main
+    import splash
+
+    # monkey patch this function to call this local function when the server starts
+    splash.server.splash_started = splash_started
+
+    if 'twisted.internet.reactor' in sys.modules:
+        del sys.modules['twisted.internet.reactor']
+
+    main(argv=sys.argv[:1])
 
 # if no arguments were given
 if len(sys.argv) == 1:
@@ -34,6 +48,6 @@ if len(sys.argv) == 1:
 
 if args.all or args.oslobors:
     download_oslobors()
-    
+
 if args.all or args.nasdaqomx:
     download_nasdaqomx()

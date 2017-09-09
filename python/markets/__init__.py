@@ -65,7 +65,7 @@ def get_instruments():
 
     # load all instruments
     oslobors = get_oslobors()
-    #nasdaqomx = get_nasdaqomx()
+    nasdaqomx = get_nasdaqomx()
 
     # markets to merge
     list_of_markets = [oslobors, nasdaqomx]
