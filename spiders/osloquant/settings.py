@@ -14,9 +14,8 @@ BOT_NAME = 'osloquant'
 SPIDER_MODULES = ['osloquant.spiders']
 NEWSPIDER_MODULE = 'osloquant.spiders'
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'osloquant (+http://www.yourdomain.com)'
+USER_AGENT = 'osloquant (+https://github.com/jonasjj/oslo-quant)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
