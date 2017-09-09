@@ -2,12 +2,13 @@ import datetime
 import numpy as np
 
 """
-File containing classes for markets, indexes and tickers
+File containing classes for markets and tickers
 """
-class Instrument(object):
-    def __init__(self, name, long_name):
+class Ticker(object):
+    def __init__(self, name, long_name, data):
         self.name = name
         self.long_name = long_name
+        self.data = data
         
     def __str__(self):
         return self.name
@@ -149,23 +150,6 @@ class Instrument(object):
 
             return self._get_row(row_index)
 
-class Market(Instrument):
+class Market(object):
     def __init__(self, name, long_name):
-        super().__init__(name, long_name)
         self.tickers = []
-
-class Ticker(Instrument):
-    def __init__(self, name, long_name, market, url):
-        super().__init__(name, long_name)
-        self.market = market
-        self.sector_name = None
-        self.data = None
-        self.segments = []
-        self.url = url
-
-class Index(Instrument):
-    def __init__(self, name, long_name, url):
-        super().__init__(name, long_name)
-        self.data = None
-        self.tickers = []
-        self.url = url

@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import datetime
+import numpy as np
 
 class NetfondsSpider(scrapy.Spider):
     name = 'netfonds'
     allowed_domains = ['netfonds.no']
     start_urls = ['http://www.netfonds.no/quotes/exchange.php']
+
+    # project specific class variables
+    market_name = 'oslobors'
+    market_name_long = 'Oslo Børs'
 
     def parse(self, response):
 
@@ -62,16 +67,22 @@ class NetfondsSpider(scrapy.Spider):
         # Split
         lines = response.text.strip().split("\n")
 
-
         # remove the first item, which is the column headers
         header = lines.pop(0)
 
         # sanity check: check that the header row is as expected
         assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'
 
-        # the parsed data
-        data = {}
-
+        # create an empty matrix to store the CSV data in
+        matrix = np.zeros(shape=len(lines),
+                          dtype=[('date', 'f8'),
+                                 ('open', 'f8'),
+                                 ('high', 'f8'),
+                                 ('low', 'f8'),
+                                 ('close', 'f8'),
+                                 ('volume', 'i8'),
+                                 ('value', 'i8')])
+        
         # fill in the data
         for line_num, line in enumerate(lines):
 
@@ -88,13 +99,11 @@ class NetfondsSpider(scrapy.Spider):
             volume = float(volume)
             value = float(value)
 
-            # data row indexed by date
-            data[date] = {'open_price': open_price,
-                          'high_price': high_price,
-                          'low_price': low_price,
-                          'close_price': close_price,
-                          'volume': volume,
-                          'value': value}
+            matrix[line_num] = date, open_price, high_price, low_price, \
+                               close_price, volume, value
+
+        # sort rows on time column, there has been some swapped samples detected in the source
+        matrix = np.sort(matrix, order='date')
 
         # print some info so that the user can see what's going on
         self.logger.info("Scraped " + ticker)
@@ -102,4 +111,4 @@ class NetfondsSpider(scrapy.Spider):
         # returned the parsed data in this storage class
         return {'ticker': ticker,
                 'name': name,
-                'data': data}
+                'data': matrix}
