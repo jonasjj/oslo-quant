@@ -18,7 +18,7 @@ class NetfondsSpider(scrapy.Spider):
             if(len(row.css("th"))):
 
                 # sanity check: check that the columns are as expected
-                columns = row.css("th::text").extract()                
+                columns = row.css("th::text").extract()
                 assert columns == ['Tick', 'Åpning', 'Høy', 'Lav', 'Siste', 'Volum', 'Verdi']
 
             # if this row contains table data
@@ -28,7 +28,7 @@ class NetfondsSpider(scrapy.Spider):
                 ticker = row.css("a::text").extract_first()
                 url = row.css("a::attr(href)").extract_first()
 
-                # convert the relative URL to absolute 
+                # convert the relative URL to absolute
                 absolute_url = response.urljoin(url)
 
                 # proceed to scrape the instrument page
@@ -59,52 +59,47 @@ class NetfondsSpider(scrapy.Spider):
         ticker = response.meta['ticker']
         name = response.meta['name']
 
-        # Split 
+        # Split
         lines = response.text.strip().split("\n")
 
-        
+
         # remove the first item, which is the column headers
         header = lines.pop(0)
 
         # sanity check: check that the header row is as expected
-        assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'        
-        
+        assert header == 'quote_date;paper;exch;open;high;low;close;volume;value'
+
         # the parsed data
-        ret = {'ticker': ticker,
-               'name ': name,
-               'data': {}}
+        data = {}
 
         # fill in the data
         for line_num, line in enumerate(lines):
 
-            try:
-                # unpack row items)
-                (date, paper, exchange, open_price, high_price,
-                 low_price, close_price, volume, value) = line.split(";")
-                
-                # parse row items
-                date = datetime.datetime.strptime(date, '%Y%m%d').timestamp()
-                open_price = float(open_price)
-                high_price = float(high_price)          
-                low_price = float(low_price)
-                close_price = float(close_price)
-                volume = float(volume)
-                value = float(value)
+            # unpack row items)
+            (date, paper, exchange, open_price, high_price,
+             low_price, close_price, volume, value) = line.split(";")
 
-                # data row indexed by date
-                ret['data'][date] = {'date': date,
-                                     'open_price': open_price,
-                                     'high_price': high_price,
-                                     'low_price': low_price,
-                                     'close_price': close_price,
-                                     'volume': volume,
-                                     'value': value}
-                
-            except:
-                self.logger.error("Failed to parse  \"" + response.url + "\" line " + \
-                               str(line_num) + "Line: \"" + str(line) + "\"")
+            # parse row items
+            date = datetime.datetime.strptime(date, '%Y%m%d').timestamp()
+            open_price = float(open_price)
+            high_price = float(high_price)
+            low_price = float(low_price)
+            close_price = float(close_price)
+            volume = float(volume)
+            value = float(value)
+
+            # data row indexed by date
+            data[date] = {'open_price': open_price,
+                          'high_price': high_price,
+                          'low_price': low_price,
+                          'close_price': close_price,
+                          'volume': volume,
+                          'value': value}
 
         # print some info so that the user can see what's going on
         self.logger.info("Scraped " + ticker)
-                
-        yield ret
+
+        # returned the parsed data in this storage class
+        return {'ticker': ticker,
+                'name': name,
+                'data': data}
