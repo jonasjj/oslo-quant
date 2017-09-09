@@ -65,23 +65,22 @@ def get_instruments():
 
     # load all instruments
     oslobors = get_oslobors()
-    nasdaqomx = get_nasdaqomx()
+    #nasdaqomx = get_nasdaqomx()
 
-    # instruments to merge
-    list_of_instruments = [oslobors.instruments,
-                           nasdaqomx.instruments]
+    # markets to merge
+    list_of_markets = [oslobors, nasdaqomx]
 
     # create a new dict containing all instruments for all markets
     _instruments = {}
-    count = 0
-    for l in list_of_instruments:
-        count += len(l)
-        _instruments.update(l)
+    for market in list_of_markets:
+        for ticker in market.tickers:
 
-    # check that no items were overwritten
-    if len(_instruments) != count:
-        raise Exception("There was a duplicate instrument name in two of the merged markets")
-        
+            # check that no items are overwritten
+            if ticker.name in market.tickers:
+                raise Exception("There are duplicate instrument names in two of the merged markets")       
+            else:
+                _instruments[ticker.name] = ticker
+            
     return _instruments
 
 def get_instrument(name):
