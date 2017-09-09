@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import pickle
+import argparse
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+
+# add relative python dir and spider dir to path
+script_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(script_dir, "../python"))
+
+from osloquant.spiders.netfonds import NetfondsSpider
+
+parser = argparse.ArgumentParser(description="Download market data")
+parser.add_argument("--all", action="store_true", help="Download from all markets")
+parser.add_argument("--oslobors", action="store_true", help="Download from Oslo Børs")
+parser.add_argument("--nasdaqomx", action="store_true", help="Download from NasdaqOMX")
+args = parser.parse_args()
+
+def download_oslobors():
+    process = CrawlerProcess(get_project_settings())
+    process.crawl(NetfondsSpider)
+    process.start()
+    
+def download_nasdaqomx():
+    raise NotImplementedError
+
+# if no arguments were given
+if len(sys.argv) == 1:
+    parser.print_help()
+
+if args.all or args.oslobors:
+    download_oslobors()
+    
+if args.all or args.nasdaqomx:
+    download_nasdaqomx()
