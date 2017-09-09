@@ -7,10 +7,6 @@ DATA_DIR = os.path.normpath(os.path.dirname(__file__) + "/../../data")
 OSLOBORS_PICKLE_PATH = DATA_DIR + "/oslobors.p"
 NASDAQOMX_PICKLE_PATH = DATA_DIR + "/nasdaqomx.p"
 
-# make this class public outside of this package
-#from markets._oslobors import OsloBors
-#from markets._nasdaqomx import NasdaqOmx
-
 # Globals used for avoiding reloading these objects as much as possible.
 # Don't access these directly, use getter functions.
 _oslobors = None

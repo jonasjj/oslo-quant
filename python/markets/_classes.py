@@ -152,4 +152,6 @@ class Ticker(object):
 
 class Market(object):
     def __init__(self, name, long_name):
+        self.name = name
+        self.long_name = long_name
         self.tickers = []
