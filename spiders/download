@@ -3,14 +3,9 @@
 
 import os
 import sys
-import pickle
 import argparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-
-# add relative python dir and spider dir to path
-script_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(script_dir, "../python"))
 
 from osloquant.spiders.netfonds import NetfondsSpider
 
@@ -37,6 +32,7 @@ def download_nasdaqomx():
     # monkey patch this function to call this local function when the server starts
     splash.server.splash_started = splash_started
 
+    # this is a hack to avoid ReactorAlreadyInstalledError
     if 'twisted.internet.reactor' in sys.modules:
         del sys.modules['twisted.internet.reactor']
 
