@@ -38,7 +38,9 @@ def run_splash():
         del sys.modules['twisted.internet.reactor']
 
     # start the splash server in a new process
-    proc = multiprocessing.Process(target=main, kwargs={'argv': sys.argv[:1]})
+    proc = multiprocessing.Process(target=main,
+                                   kwargs={'argv': sys.argv[:1]},
+                                   daemon=True)
     proc.start()
 
     # wait until the splash server is up and running
