@@ -10,7 +10,7 @@ import numpy as np
 # A lua script which shall be passed to the splash browser.
 # The script will wait for a specific tag to be loaded.
 #
-# usage: LUA_SCRIPT % css_item_to_wait_for
+# usage: LUA_SCRIPT % (css_item_to_wait_for % button_to_click)
 #
 LUA_SCRIPT = """
 function main(splash)
@@ -21,6 +21,20 @@ function main(splash)
   while not splash:select('%s') do
     splash:wait(0.1)
   end
+
+  -- click the popup button
+  local do_not_show_button = splash:select('#popupDNS')
+  do_not_show_button:mouse_click()
+  
+  -- Don't know how long this takes
+  splash:wait(2.5)
+
+  local button = splash:select('%s')
+  button:mouse_click()
+
+  -- Don't know how long this takes
+  splash:wait(2.5)
+
   return {html=splash:html()}
 end
 """
@@ -47,11 +61,13 @@ class NasdaqOmxSpider(scrapy.Spider):
     def start_requests(self):
 
         for url in self.start_urls:
+            self.logger.info("Parsing " + url)
             yield SplashRequest(url=url,
                                 callback=self.parse,
                                 endpoint='execute',
                                 args={
-                                    'lua_source': LUA_SCRIPT % '.dataTables_info',
+                                    'lua_source':
+                                    LUA_SCRIPT % ('.dataTables_info', '.paginate_active'),
                                 })
 
 
@@ -61,7 +77,7 @@ class NasdaqOmxSpider(scrapy.Spider):
 
         # the table element which contains the index list
         table = response.css('#directory')
-
+        
         # table headers
         headers = table.css('th')
 
@@ -102,7 +118,15 @@ class NasdaqOmxSpider(scrapy.Spider):
             # ticker name
             ticker = row.css('a::text').extract_first()
 
-            texts = row.css('td::text').extract()
+            tds = row.css('td')
+
+            texts = []
+            for td in tds:                
+                text = td.css('::text').extract()
+                if text is None:
+                    texts.append("")
+                else:
+                    texts.append(text)
 
             # unpack the text items
             name = texts[0]
@@ -116,6 +140,7 @@ class NasdaqOmxSpider(scrapy.Spider):
             asset_type = texts[8]
 
             # POST request for historical data for this ticker
+            self.logger.info("Sendind POST request for " + ticker)
             yield FormRequest(url="https://indexes.nasdaqomx.com/Index/HistoryData",
                               formdata={
                                   'id': ticker,
@@ -125,9 +150,30 @@ class NasdaqOmxSpider(scrapy.Spider):
                               meta={'ticker': ticker, 'name': name},
                               callback=self.parse_json)
 
-                    
-        # TODO: need to click next page here
 
+        # the link elements that are the pagination buttons
+        buttons = response.css(".dataTables_paginate span a")
+
+        first_button_index = int(buttons[0].css("::text").extract_first())
+        last_button_index = int(buttons[-1].css("::text").extract_first())
+        active_button_index = int(buttons.css(".paginate_active ::text").extract_first())
+        
+        # if there are pages which haven't been parsed
+        if active_button_index < last_button_index:
+
+            next_button_index = active_button_index + 1 
+            next_button_css = ".dataTables_paginate span :nth-child(%d)" % (next_button_index)
+
+            self.logger.info("Clicking pagination button " + str(next_button_index))
+
+            yield SplashRequest(url=response.url,
+                                callback=self.parse,
+                                endpoint='execute',
+                                args={
+                                    'lua_source':
+                                    LUA_SCRIPT % ('.dataTables_info', next_button_css),
+                                })
+        
     # parse the POST response containing the ticker data
     def parse_json(self, response):
 
