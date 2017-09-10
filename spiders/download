@@ -6,6 +6,7 @@ import sys
 import argparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+import multiprocessing
 
 from osloquant.spiders.netfonds import NetfondsSpider
 
@@ -20,15 +21,19 @@ def download_oslobors():
     process.crawl(NetfondsSpider)
     process.start()
 
-def download_nasdaqomx():
+def run_splash():
+    """This function will start the splash server in a new process"""
 
+    # used for blocking the main thread until the splash server is up
+    semaphore = multiprocessing.Semaphore(value=0)
+    
     # this function will be called when the splash server is up and running
     def splash_started(opts, stderr):
-        print("Splash stared")
+        semaphore.release()
 
     from splash.server import main
     import splash
-
+    
     # monkey patch this function to call this local function when the server starts
     splash.server.splash_started = splash_started
 
@@ -36,7 +41,17 @@ def download_nasdaqomx():
     if 'twisted.internet.reactor' in sys.modules:
         del sys.modules['twisted.internet.reactor']
 
-    main(argv=sys.argv[:1])
+    # start the splash server in a new process
+    proc = multiprocessing.Process(target=main, kwargs={'argv': sys.argv[:1]})
+    proc.start()
+
+    # wait until the splash server is up and running
+    semaphore.acquire()
+
+    print("Splash server started")
+        
+def download_nasdaqomx():
+    run_splash()
 
 # if no arguments were given
 if len(sys.argv) == 1:
