@@ -19,6 +19,9 @@ def get_oslobors():
     
     Return:
        An OsloBors instance
+
+    Raises:
+       FileNotFoundError if the pickle isn't found
     """
     global _oslobors
     
@@ -38,6 +41,9 @@ def get_nasdaqomx():
     
     Return:
        An NasdaqOmx instance
+
+    Raises:
+       FileNotFoundError if the pickle isn't found
     """
     global _nasdaqomx
 
@@ -53,7 +59,8 @@ def get_nasdaqomx():
 
 def get_instruments():
     """
-    Get a pickled dict of all instruments in all markets
+    Get a pickled dict of all instruments in all markets.
+    If a market's pickle file isn't found, it will be omitted.
 
     Return:
        A dict of instruments indexed by name"""
@@ -63,12 +70,20 @@ def get_instruments():
     if _instruments is not None:
         return _instruments
 
-    # load all instruments
-    oslobors = get_oslobors()
-    nasdaqomx = get_nasdaqomx()
-
     # markets to merge
-    list_of_markets = [oslobors, nasdaqomx]
+    list_of_markets = []
+
+    # load all instruments if the pickle files exist
+    try:
+        oslobors = get_oslobors()
+        list_of_markets.append(oslobors)
+    except FileNotFoundError:
+        pass
+    try:
+        nasdaqomx = get_nasdaqomx()
+        list_of_markets.append(nasdaqomx)
+    except FileNotFoundError:
+        pass
 
     # create a new dict containing all instruments for all markets
     _instruments = {}
