@@ -1,58 +1,51 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy_splash import SplashRequest
 from scrapy.http import FormRequest
 import json
 import re
 import datetime
 import numpy as np
 
-# A lua script which shall be passed to the splash browser.
-# The script will wait for a specific tag to be loaded.
-#
-# usage: LUA_SCRIPT % (css_item_to_wait_for % button_to_click)
-#
-LUA_SCRIPT = """
-function main(splash)
-  splash:set_user_agent('splash.args.ua')
-  assert(splash:go(splash.args.url))
-  
-  -- requires Splash 2.3  
-  while not splash:select('%s') do
-    splash:wait(0.1)
-  end
-
-  -- click the popup button
-  local do_not_show_button = splash:select('#popupDNS')
-  do_not_show_button:mouse_click()
-  
-  -- Don't know how long this takes
-  splash:wait(2.5)
-
-  local button = splash:select('%s')
-  button:mouse_click()
-
-  -- Don't know how long this takes
-  splash:wait(2.5)
-
-  return {html=splash:html()}
-end
-"""
-
 class NasdaqOmxSpider(scrapy.Spider):
     name = 'nasdaqomx'
     allowed_domains = ['nasdaqomx.com']
 
-    # Indexes that are relevant to Norwegian traders
-    start_urls = [#'https://indexes.nasdaqomx.com/Index/Directory/Iceland',
-                  #'https://indexes.nasdaqomx.com/Index/Directory/Stockholm',
-                  'https://indexes.nasdaqomx.com/Index/Directory/Oslo',
-                  #'https://indexes.nasdaqomx.com/Index/Directory/Helsinki',
-                  #'https://indexes.nasdaqomx.com/Index/Directory/Nordic',
-                  #'https://indexes.nasdaqomx.com/Index/Directory/Copenhagen',
-                  #'https://indexes.nasdaqomx.com/Index/Directory/Europe',
-    ]
-        
+    # Index groups that are relevant to Norwegian traders
+    categories = [
+        #{'name': 'AlphaDEX', 'id': 5064},
+        #{'name': 'NASDAQ Commodity', 'id': 12},
+        #{'name': 'Custom Indexes', 'id': 54},
+        #{'name': 'NASDAQ Dividend and Income Index Family', 'id': 51},
+        #{'name': 'Dorsey Wright Indexes', 'id': 5075},
+        {'name': 'Iceland', 'id': 13},
+        {'name': 'Stockholm', 'id': 3},
+        {'name': 'Oslo', 'id': 17},
+        #{'name': 'Russia', 'id': 18},
+        #{'name': 'Baltic', 'id': 6},
+        {'name': 'Helsinki', 'id': 5},
+        {'name': 'Nordic', 'id': 14},
+        {'name': 'Copenhagen', 'id': 4},
+        {'name': 'Europe', 'id': 16},
+        {'name': 'Nordic Market', 'id': 7},
+        #{'name': 'ISE Indexes', 'id': 5104},
+        #{'name': 'NASDAQ Global Index Family', 'id': 15},
+        #{'name': 'NASDAQ Global Index Developed Markets', 'id': 46},
+        #{'name': 'NASDAQ Global Index Emerging Markets', 'id': 47},
+        #{'name': 'NASDAQ Global Index Americas Region', 'id': 48},
+        #{'name': 'NASDAQ Global Index Europe Region', 'id': 49},
+        #{'name': 'NASDAQ Global Index AMEA Region', 'id': 50},
+        #{'name': 'US Style', 'id': 5068},
+        #{'name': 'Green', 'id': 20},
+        #{'name': 'NASDAQ BulletShares Ladder Indexes', 'id': 56},
+        #{'name': 'Nasdaq KBW', 'id': 5073},
+        #{'name': 'Sharia', 'id': 19},
+        #{'name': 'NASDAQ', 'id': 33},
+        #{'name': 'PHLX', 'id': 34},
+        #{'name': 'PHLX Other', 'id': 35},
+        #{'name': 'Other', 'id': 42},
+        #{'name': 'VINX Indexes', 'id': 55},
+        ]
+
     # project specific class variables
     market_name = 'nasdaqomx'
     market_name_long = 'Nasdaq OMX'
@@ -60,87 +53,34 @@ class NasdaqOmxSpider(scrapy.Spider):
     # this function overloads the default start_requests() function
     def start_requests(self):
 
-        for url in self.start_urls:
-            self.logger.info("Parsing " + url)
-            yield SplashRequest(url=url,
-                                callback=self.parse,
-                                endpoint='execute',
-                                args={
-                                    'lua_source':
-                                    LUA_SCRIPT % ('.dataTables_info', '.paginate_active'),
-                                })
+        # used for checking that a ticker isn't downloaded twice
+        self.requested_tickers = set()
 
+        for category in self.categories:
+            self.logger.info('POST request for category "' + category['name'] + '"')
+                             
+            # return a POST request for getting the index list in this category group
+            yield FormRequest(url="https://indexes.nasdaqomx.com/Index/DirectoryData",
+                              formdata={'categoryID': str(category['id'])},
+                              callback=self.parse_categories)
 
+    def parse_categories(self, response):
 
-    # parse the top level list of indexes
-    def parse(self, response):
+        # get a dict with the json data
+        data = json.loads(response.body_as_unicode())
 
-        # the table element which contains the index list
-        table = response.css('#directory')
-        
-        # table headers
-        headers = table.css('th')
-
-        # column headers
-        header_texts = headers.css('::text').extract()
-
-        # strip whitespace from the headers
-        stripped_headers = []
-        for h in header_texts:
-            stripped_headers.append(h.strip())
-
-        # check that the headers have the expected format
-        assert stripped_headers == ['Symbol',
-                                    'Name',
-                                    'Brand',
-                                    'Series',
-                                    'Currency',
-                                    'Schedule',
-                                    'DataSet',
-                                    'Dissemination Frequency',
-                                    'Entitlement',
-                                    'Asset Type']
-
-        # all table rows that contain the indexes
-        rows = table.css('tbody tr')
-
-        for row in rows:
-
-            # table cells
-            cell = row.css('td')
-
-            # the relative URL to the index page
-            rel_url = row.css('a::attr(href)').extract_first()
-
-            # the absolute URL to the index page
-            abs_url = response.urljoin(rel_url)
+        # for all instruments in the list
+        for instrument in data['aaData']:
             
-            # ticker name
-            ticker = row.css('a::text').extract_first()
+            ticker = instrument['Symbol']
+            name = instrument['Name']
 
-            tds = row.css('td')
-
-            texts = []
-            for td in tds:                
-                text = td.css('::text').extract()
-                if text is None:
-                    texts.append("")
-                else:
-                    texts.append(text)
-
-            # unpack the text items
-            name = texts[0]
-            brands = texts[1]
-            series = texts[2]
-            currency = texts[3]
-            schedule = texts[4]
-            dataset = texts[5]
-            dissenmination_frequency = texts[6]
-            entitlement = texts[7]
-            asset_type = texts[8]
+            if ticker in self.requested_tickers:
+                self.logger.warning('Ticker "' + ticker + '" has already been requested. Skipping')
+                continue
 
             # POST request for historical data for this ticker
-            self.logger.info("Sendind POST request for " + ticker)
+            self.logger.info('Sending POST request for ticker "' + ticker + '"')
             yield FormRequest(url="https://indexes.nasdaqomx.com/Index/HistoryData",
                               formdata={
                                   'id': ticker,
@@ -148,34 +88,10 @@ class NasdaqOmxSpider(scrapy.Spider):
                                   'endDate': '2050-09-03T00:00:00.000',
                                   'timeOfDay': 'EOD'},
                               meta={'ticker': ticker, 'name': name},
-                              callback=self.parse_json)
+                              callback=self.parse_historical_data)
 
-
-        # the link elements that are the pagination buttons
-        buttons = response.css(".dataTables_paginate span a")
-
-        first_button_index = int(buttons[0].css("::text").extract_first())
-        last_button_index = int(buttons[-1].css("::text").extract_first())
-        active_button_index = int(buttons.css(".paginate_active ::text").extract_first())
-        
-        # if there are pages which haven't been parsed
-        if active_button_index < last_button_index:
-
-            next_button_index = active_button_index + 1 
-            next_button_css = ".dataTables_paginate span :nth-child(%d)" % (next_button_index)
-
-            self.logger.info("Clicking pagination button " + str(next_button_index))
-
-            yield SplashRequest(url=response.url,
-                                callback=self.parse,
-                                endpoint='execute',
-                                args={
-                                    'lua_source':
-                                    LUA_SCRIPT % ('.dataTables_info', next_button_css),
-                                })
-        
     # parse the POST response containing the ticker data
-    def parse_json(self, response):
+    def parse_historical_data(self, response):
 
         # unpack the meta values that we attached to this request
         ticker = response.meta['ticker']

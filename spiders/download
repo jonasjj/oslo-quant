@@ -17,53 +17,22 @@ parser.add_argument("--oslobors", action="store_true", help="Download from Oslo 
 parser.add_argument("--nasdaqomx", action="store_true", help="Download from NasdaqOMX")
 args = parser.parse_args()
 
-def run_splash():
-    """This function will start the splash server in a new process"""
-
-    # used for blocking the main thread until the splash server is up
-    semaphore = multiprocessing.Semaphore(value=0)
-    
-    # this function will be called when the splash server is up and running
-    def splash_started(opts, stderr):
-        semaphore.release()
-
-    from splash.server import main
-    import splash
-    
-    # monkey patch this function to call this local function when the server starts
-    splash.server.splash_started = splash_started
-
-    # this is a hack to avoid ReactorAlreadyInstalledError
-    if 'twisted.internet.reactor' in sys.modules:
-        del sys.modules['twisted.internet.reactor']
-
-    # start the splash server in a new process
-    proc = multiprocessing.Process(target=main,
-                                   kwargs={'argv': sys.argv[:1]},
-                                   daemon=True)
-    proc.start()
-
-    # wait until the splash server is up and running
-    semaphore.acquire()
-
-    print("Splash server started")
-        
-def download_oslobors():
-    process = CrawlerProcess(get_project_settings())
-    process.crawl(NetfondsSpider)
-    process.start()
-
-def download_nasdaqomx():
-    process = CrawlerProcess(get_project_settings())
-    process.crawl(NasdaqOmxSpider)
-    process.start()
-
 # if no arguments were given
 if len(sys.argv) == 1:
     parser.print_help()
 
+# create a crawler process if any of the spiders were requested
+if args.all or args.oslobors or args.nasdaqomx:
+    process = CrawlerProcess(get_project_settings())
+    
 if args.all or args.oslobors:
-    download_oslobors()
+    process.crawl(NetfondsSpider)
 
 if args.all or args.nasdaqomx:
-    download_nasdaqomx()
+    process.crawl(NasdaqOmxSpider)
+    
+# start the crawler process, if it has been created
+try:
+    process.start()
+except:
+    pass
