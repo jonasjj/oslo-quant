@@ -20,28 +20,29 @@ USER_AGENT = 'osloquant (+https://github.com/jonasjj/oslo-quant)'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
-SPLASH_URL = 'http://localhost:8050'
 
 # Info shows only the name of the pages being scraped, not the content
 LOG_LEVEL='INFO'
 
+#SPLASH_URL = 'http://localhost:8050'
+
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
-SPIDER_MIDDLEWARES = {
-    'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
-}
+#SPIDER_MIDDLEWARES = {
+#    'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
+#}
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-    'scrapy_splash.SplashCookiesMiddleware': 723,
-    'scrapy_splash.SplashMiddleware': 725,
-    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
-}
+#DOWNLOADER_MIDDLEWARES = {
+#    'scrapy_splash.SplashCookiesMiddleware': 723,
+#    'scrapy_splash.SplashMiddleware': 725,
+#    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+#}
 
-DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
+#DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 
-HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
+#HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
