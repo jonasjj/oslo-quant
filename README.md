@@ -5,19 +5,23 @@ Download, plot and play with data from Oslo Børs and Nasdaq OMX
 This program works with data that has day-to-day resolution, 
 which happens to be what is available for free from Oslo Børs and Nasdaq OMX.
 
+The [Scrapy](https://scrapy.org/) framework is used for the web scraping.
+
 ## How to install dependencies on a fresh Ubuntu 17.04 installation
 ```
 sudo apt-get install python3-numpy
 sudo apt-get install python3-pyqt4
 sudo apt-get install python3-pyqtgraph
 sudo apt-get install python3-progressbar
+sudo apt-get install python3-tabulate
 sudo apt-get install python3-setproctitle
-sudo apt-get install unoconv
+sudo apt-get install python3-scrapy
 ```
 
 ## How to download all available data
 ```
-./scripts/download_load_and_pickle --all
+cd spiders
+./download --all
 ```
 
 The data will be in the ./data dir in the project root.
@@ -25,19 +29,19 @@ The data will be in the ./data dir in the project root.
 ## How to plot tickers
 Example plotting the OBX Total Return Index daily close prices:
 ```
-python3 python/plot_instrument.py -i OBX close
+python3 python/plot_instrument.py -i OBX.OSE close
 ```
 ![plot_instrument_obx_close_2.png](https://jonasjulianjensen.com/wp-content/uploads/2017/08/plot_instrument_obx_close_2.png)
 
 Linked plot with Statoil and Norwegian daily low prices:
 ```
-python3 python/plot_instrument.py -i STL low -i NAS low
+python3 python/plot_instrument.py -i STL.OSE low -i NAS.OSE low
 ```
 ![plot_instrument_stl_nas_low_2.png](https://jonasjulianjensen.com/wp-content/uploads/2017/08/plot_instrument_stl_nas_low_2.png)
 
 Find the historical return from holding the OBX index through december:
 ```
-python3 python/historical_return_from_to_date.py OBX 2017-12-01 2017-12-31
+python3 python/historical_return_from_to_date.py OBX.OSE 2017-12-01 2017-12-31
 OrderedDict([('trades',
               ...
              ('year_count', 20),
@@ -51,6 +55,6 @@ Find the expected average gain, based on historical data,
 if the OBX is purchased and held for 31 days. 
 Present the data in a plot which is averaged over a 7 days long sliding window:
 ```
-python3 python/historical_return_best_dates.py --avg_gain --avg 7 --plot OBX 31
+python3 python/historical_return_best_dates.py --avg_gain --avg 7 --plot OBX.OSE 31
 ```
 ![historical_return_best_dates_obx_2.png](https://jonasjulianjensen.com/wp-content/uploads/2017/08/historical_return_best_dates_obx_2.png)
