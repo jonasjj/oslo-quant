@@ -93,7 +93,6 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         # the text responsible for showing the y value where the vertival line is
         value_text = pg.TextItem(anchor=(0.5,0))
         value_text.setPos(92,0)
-        pl.addItem(value_text)
         value_text.setParentItem(pl)
         pl.value_text = value_text
 
