@@ -19,7 +19,10 @@ def parse_date(date_str):
     Return:
         datetime.date object
     """
-    return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    try:
+        return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    except:
+        raise ValueError("Couldn't parse date " + str(date_str) + " on the format YYYY-MM-DD")
 
 def historical_return_from_to_date(instrument, buy_date, sell_date):
 
@@ -125,8 +128,8 @@ if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Find the historical return between dates")
     parser.add_argument("instrument", help="Instrument name (ex.: OBX.OSE)")
-    parser.add_argument("buy_date", help="Buy date")
-    parser.add_argument("sell_date", help="Sell date")
+    parser.add_argument("buy_date", help="Buy date: YYYY-MM-DD")
+    parser.add_argument("sell_date", help="Sell date: YYYY-MM-DD")
     args = parser.parse_args()
 
     # get the instrument from the database
