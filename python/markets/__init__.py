@@ -15,10 +15,10 @@ _instruments = None
     
 def get_oslobors():
     """
-    Get a pickled OsloBors instance""
+    Get the pickled Oslo Børs data
     
     Return:
-       An OsloBors instance
+       A Market instance
 
     Raises:
        FileNotFoundError if the pickle isn't found
@@ -37,10 +37,10 @@ def get_oslobors():
 
 def get_nasdaqomx():
     """
-    Get a pickled NasdaqOmx instance""
+    Get the pickled NasdaqOMX data
     
     Return:
-       An NasdaqOmx instance
+       A Market instance
 
     Raises:
        FileNotFoundError if the pickle isn't found
