@@ -1,5 +1,5 @@
 # oslo-quant
-This frameworks is intended for traders based on Oslo Stock Exchange who wishes to perfom quantitative analysis on market data using Python.
+This framework is intended for traders based on Oslo Stock Exchange who wishes to perform quantitative analysis on market data using Python.
 Download, plot and play with data from Oslo Børs and Nasdaq OMX
 
 This program works with data that has day-to-day resolution, 
