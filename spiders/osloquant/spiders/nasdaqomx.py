@@ -112,7 +112,6 @@ class NasdaqOmxSpider(scrapy.Spider):
                                  ('value', 'f8'),
                                  ('high', 'f8'),
                                  ('low', 'f8'),
-                                 ('close', 'f8'),
                                  ('net_change', 'f8')])
 
         # populate the matrix with the extracted data
@@ -126,10 +125,9 @@ class NasdaqOmxSpider(scrapy.Spider):
             value = 0.0 if row['Value'] is None else float(row['Value'])
             high = 0.0 if row['High'] is None else float(row['High'])
             low = 0.0 if row['Low'] is None else float(row['Low'])
-            close = 0.0 if row['Close'] is None else float(row['Close'])
             net_change = 0.0 if row['NetChange'] is None else float(row['NetChange'])
-            
-            matrix[row_num] = date, value, high, low, close, net_change
+
+            matrix[row_num] = date, value, high, low, net_change
 
         # print some info so that the user can see what's going on
         self.logger.info("Scraped " + ticker)
