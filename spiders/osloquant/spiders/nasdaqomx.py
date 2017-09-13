@@ -103,6 +103,9 @@ class NasdaqOmxSpider(scrapy.Spider):
         # rows of dicts which is the historical data for this ticker
         rows = data['aaData']
 
+        # reverse the list to get the earlies date at index 0
+        rows.reverse()
+
         # create an empty matrix to store the CSV data in
         matrix = np.zeros(shape=len(rows),
                           dtype=[('date', 'f8'),
