@@ -218,7 +218,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         timestamp_str = timestamp.strftime("%Y-%m-%d")
         text = "<span>crosshair</span>: " \
                "<span style='color: Aqua'>x=%s</span>, " \
-               "<span style='color: GreenYellow'>y=%0.1f</span>" % (timestamp_str, cursor_y)
+               "<span style='color: GreenYellow'>y=%0.4f</span>" % (timestamp_str, cursor_y)
         self.label.setText(text)
 
     def hide_label(self):
@@ -289,7 +289,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                     y = y_data[x_index]
                 
                     # set the y value at the vertical line on this plot at the x position
-                    text = "<span style='color: GreenYellow'>y=%0.1f</span>" % y
+                    text = "<span style='color: GreenYellow'>y=%0.4f</span>" % y
                     pl.value_text.setHtml(text)
                 
         else:
