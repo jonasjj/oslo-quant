@@ -101,7 +101,7 @@ def historical_return_dates(instrument,
     
     return d
 
-def _print(results):
+def print_tablist(results):
     """Print a tabulated list"""
 
     tab_list = []
@@ -173,11 +173,11 @@ if __name__ == "__main__":
         
     if args.avg_gain:
         print("\n%s dates sorted by average gain" % best_or_worst_string)            
-        _print(avg_gain_list[:args.topn -1])
+        print_tablist(avg_gain_list[:args.topn -1])
             
     if args.pos_gain:
         print("\n%s dates sorted by change of positive gain gain" % best_or_worst_string)
-        _print(pos_gain_list[:args.topn -1])
+        print_tablist(pos_gain_list[:args.topn -1])
 
     if args.plot:
         import numpy as np
