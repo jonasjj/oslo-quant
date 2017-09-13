@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Find the historical return between dates")
-    parser.add_argument("instrument", help="Instrument name (ex.: OBX)")
+    parser.add_argument("instrument", help="Instrument name (ex.: OBX.OSE)")
     parser.add_argument("buy_date", help="Buy date")
     parser.add_argument("sell_date", help="Sell date")
     args = parser.parse_args()

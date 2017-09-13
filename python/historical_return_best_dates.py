@@ -123,7 +123,7 @@ if __name__ == "__main__":
     
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Find the best dates to buy an sell")
-    parser.add_argument("instrument", help="Instrument name (ex.: OBX)")
+    parser.add_argument("instrument", help="Instrument name (ex.: OBX.OSE)")
     parser.add_argument("days_between", type=int, help="Days between buy and sell")
     parser.add_argument("--avg_gain",
                         action='store_true',
