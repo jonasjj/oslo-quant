@@ -68,7 +68,7 @@ def get_instruments():
 
     # if the dict has already has been created
     if _instruments is not None:
-        return _instruments
+        return _instruments.copy()
 
     # markets to merge
     list_of_markets = []
@@ -96,7 +96,7 @@ def get_instruments():
             else:
                 _instruments[ticker.name] = ticker
             
-    return _instruments
+    return _instruments.copy()
 
 def get_instrument(name):
     """
