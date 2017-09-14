@@ -1,1 +1,2 @@
-from strategy._classes import Strategy, Order
+from ._classes import Order, Share
+from ._randomstrategy import RandomStrategy

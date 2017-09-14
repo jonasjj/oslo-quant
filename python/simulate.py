@@ -3,11 +3,19 @@
 
 import argparse
 import sys
+import datetime
 
 from historical_return_from_to_date import parse_date
 
 def simulate(strategy, from_date, to_date):
-    pass
+
+    today = from_date
+
+    while today <= to_date:
+
+        orders = strategy.execute(today)
+        
+        today += datetime.timedelta(days=1)
 
 if __name__ == "__main__":
 
@@ -18,10 +26,10 @@ if __name__ == "__main__":
     parser.add_argument("to_date", help="To date: YYYY-MM-DD")
     args = parser.parse_args()
 
-    # load the strategy
+    # load the strategy class
     import strategy    
     try:
-        strategy = getattr(strategy, args.strategy)
+        strategy_class = getattr(strategy, args.strategy)        
     except AttributeError:
         print('Could not import ' + args.strategy + ' from strategy')
         print("Available strategies are:")
@@ -31,10 +39,13 @@ if __name__ == "__main__":
             if attr.endswith("Strategy"):
                 print("   " + attr)
                 sys.exit(1)
-    
+
     # parse the from/to dates
     from_date = parse_date(args.from_date)
     to_date = parse_date(args.to_date)
 
+    # create the strategy instance
+    strategy = strategy_class([], from_date, to_date)
+    
     # run the simulation
     simulate(strategy, from_date, to_date)
