@@ -3,19 +3,16 @@
 
 import argparse
 import sys
-import datetime
 
 from historical_return_from_to_date import parse_date
+from markets import trading_days
 
 def simulate(strategy, from_date, to_date):
 
-    today = from_date
+    # for all trading days between the two dates
+    for today in trading_days(from_date, to_date):
 
-    while today <= to_date:
-
-        orders = strategy.execute(today)
-        
-        today += datetime.timedelta(days=1)
+        strategy.execute(today)
 
 if __name__ == "__main__":
 

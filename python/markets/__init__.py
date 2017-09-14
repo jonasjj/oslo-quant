@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import datetime
 
 # dir to store downloaded data in
 DATA_DIR = os.path.normpath(os.path.dirname(__file__) + "/../../data")
@@ -132,3 +133,23 @@ def is_trading_day(date, ticker=get_instrument('OBX.OSE')):
         return True
     except KeyError:
         return False
+
+def trading_days(from_date, to_date, ticker=get_instrument('OBX.OSE')):
+    """
+    Find the closed interval of trading days between two dates
+
+    Args:
+       from_date(datetime.date):
+       to_date(datetime.date):
+       ticker: Ticker object to use in check
+
+    Yields:
+       datetime.date objects
+    """
+    trading_days = []
+    date = from_date
+
+    while date <= to_date:
+        if is_trading_day(date):
+            yield date
+        date += datetime.timedelta(days=1)
