@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 # dir to store downloaded data in
 DATA_DIR = os.path.normpath(os.path.dirname(__file__) + "/../../data")
@@ -15,7 +16,7 @@ _instruments = None
     
 def get_oslobors():
     """
-    Get the pickled Oslo Børs data
+    Get the pickled Oslo Exchange data
     
     Return:
        A Market instance
@@ -110,3 +111,24 @@ def get_instrument(name):
     """
     instruments = get_instruments()
     return instruments[name]
+
+def is_trading_day(date, ticker=get_instrument('OBX.OSE')):
+    """
+    Check if this is a trading day
+    
+    Args:
+       date(datetime.date): The date to check for
+       ticker: Ticker object to use in check
+
+    Return:
+       True if the date is a trading day, else False
+
+    Raises:
+       KeyError: On item not found
+    """
+    # If get_day_index() succeeds, this must be a trading day
+    try:
+        ticker.get_day_index(date)
+        return True
+    except KeyError:
+        return False

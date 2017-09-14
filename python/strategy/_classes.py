@@ -76,21 +76,7 @@ class Strategy(object, metaclass=ABCMeta):
         # get a copy of the ticker object which we can modify
         ticker = deepcopy(get_instrument(name))
 
-        # get the row
-        timestamp = datetime.datetime(self.today.year,
-                                      self.today.month,
-                                      self.today.day).timestamp()        
-        match_rows = np.where(ticker.data['date'] == timestamp)
-
-        # Check that only one row matches this date
-        if len(match_rows[0]) == 0:
-            raise Exception("No rows match " + str(today) + " in " + str(ticker))
-        elif len(match_rows[0]) > 1:
-            raise Exception("More than one row matches " + \
-                            str(self.today) + " in " + str(ticker))
-
-        # the index of the single matching row for today's data for this ticker
-        row_index = match_rows[0][0]
+        row_index = ticker.get_day_index(self.today)
 
         # delete data which is into the future and the strategy now nothing of
         ticker.data = np.delete(ticker.data, np.s_[row_index + 1:])

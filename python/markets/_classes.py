@@ -56,15 +56,15 @@ class Ticker(object):
 
         return d
 
-    def get_day(self, date):
+    def get_day_index(self, date):
         """
-        Get the data for a specific date.
+        Get index of the row in data matching a specific date.
         
         Args:
            date (datetime.date)
 
-        Return:
-           Dict containing data for this date
+        Return(int):
+           Index of the Ticker.data row matching the date
 
         Raises:
            KeyError if there is no data for this date
@@ -85,13 +85,29 @@ class Ticker(object):
             # get the index of the matching row
             row_index = matches[0]
 
-            return self._get_row(row_index)
+            return row_index
             
         # if there were more than one matching row
         else:
             # There must be something wrong in the database, which one should we return?
             raise Exception("There was more than one matching row")
+
+    def get_day(self, date):
+        """
+        Get the data for a specific date.
         
+        Args:
+           date (datetime.date)
+
+        Return:
+           Dict containing data for this date
+
+        Raises:
+           KeyError if there is no data for this date
+        """
+        row_index = self.get_day_index(date)
+        return self._get_row(row_index)
+    
     def get_day_or_first_after(self, date):
         """
         Get the data for the first date after
