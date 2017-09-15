@@ -8,30 +8,46 @@ from markets import get_instrument
 class Order(object):
     """An order recommendation"""
 
-    def __init__(self, instrument, action, price, quantity):
+    def __init__(self, ticker, action, quantity, price=None):
         """
         Args:
-           instrument (markets._classes.Instrument): The instrument
+           ticker (markets._classes.Ticker): The ticker
            action (str): 'buy' or 'sell'
-           price (float): Limit price
            quantity (int): The number of shared
+           price (float): Limit price or None for market value
         """
-        self.instrument = instrument
+        self.ticker = ticker
         self.action = action
-        self.price = price
         self.quantity = quantity
+        self.price = price
+        self.filled = False
+        self.filled_price = -999999.0
+        
+    def __str__(self):
+        s = "%s %s %s" % (self.action, self.quantity, self.ticker)
+        
+        # check if self.price is defined
+        if self.price is None:
+            s += " at market price"
+        else:
+            s += " limit: " + str(self.price)
 
+        if self.filled:
+            s += " filled: " + str(self.filled_price)
+            
+        return s
+        
 class Share(object):
     """A share holding position"""
 
-    def __init__(self, instrument, quantity, cost=None):
+    def __init__(self, ticker, quantity, cost=None):
         """
         Args:
-           instrument (markets._classes.Instrument): The instrument
+           ticker (markets._classes.Ticker): The ticker
            quantity (int): The number of shares (negative for short)
            cost (float): Optional acquisition cost
         """
-        self.instrument = instrument
+        self.ticker = ticker
         self.quantity = quantity
         self.cost = cost    
         
@@ -39,16 +55,18 @@ class Strategy(object, metaclass=ABCMeta):
     """Base class for all strategies"""
 
     @abstractmethod
-    def __init__(self, portfolio, from_date, to_date):
+    def __init__(self, money, portfolio, from_date, to_date):
         """
         Override this method and call super()
 
         Args:
+           money(float): Initial liquid assets
            portfolio: List of Share objects represening
                       the intital share holding positions
            from_date(datetime.date): First daty of the simulation
            to_date(datetime.date): Last day of the simulation
         """
+        self.money = money
         self.portfolio = portfolio
         self.from_date = from_date
         self.to_date = to_date
