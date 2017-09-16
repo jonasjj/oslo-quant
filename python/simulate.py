@@ -9,7 +9,31 @@ from markets import trading_days
 from markets import get_instrument
 from strategy import Share
 
-def brokerage(order):
+# The maximum owned assets divided by the portifolio value
+MAX_LOAN_RATIO = 0.5
+
+def calculate_interest(balance):
+    """
+    Calculate the interest for an account balance for 1 day
+    
+    Args:
+       balance(float): The money in the account
+
+    Return:
+       The owed or allowed interest
+    """
+    # Nordnet Mini / Normal / Bonus
+    annual_loan_interest_rate_percentage = -0.0605
+    annual_deposit_interest_rate_percentage = 0.0
+
+    if balance < 0:
+        interest_percentage = annual_loan_interest_rate_percentage
+    else:
+        interest_percentage = annual_deposit_interest_rate_percentage
+
+    return ((interest_percentage / 100.0) / 365.0) * balance
+
+def calculate_brokerage(order):
     """
     Calculate the brokerage for an order
 
@@ -73,24 +97,27 @@ def simulate(strategy, money, from_date, to_date):
                 raise Exception("Order.action is neither 'sell' nor 'buy'")
 
             cost = order.quantity * order.price
-            fees = brokerage(order)
+            brokerage = calculate_brokerage(order)
+            interest = calculate_interest(money)
 
             money -= cost
-            money -= fees
+            money -= brokerage
+            money += interest
 
             # print a message
             s = str(order)
             if(order.filled):
-                s += ", fees: %.0f, cost: %.0f, money: %.0f" % (fees, cost, money)            
+                s += ", brokerage: %.0f, cost: %.0f, interest: %.0f, money: %.0f" % \
+                     (brokerage, cost, interest, money)
             print(s)
 
         # calculate the current market value
-        market_value = money
+        portfolio_value = money
         for share in portfolio:
             share_value = share.get_value(today)
-            market_value += share_value
+            portfolio_value += share_value
 
-        print("Market value: ", market_value)
+        account_value = money + portfolio_value
             
 if __name__ == "__main__":
 
