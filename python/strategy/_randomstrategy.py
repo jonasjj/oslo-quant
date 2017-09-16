@@ -8,7 +8,7 @@ class RandomStrategy(Strategy):
     def execute(self, today):
         super().execute(today)
 
-        ticker = self.get_instrument('OBX.OSE')
+        ticker = 'OBX.OSE'
 
         order = Order(ticker, "buy", 100, 640.1)
         

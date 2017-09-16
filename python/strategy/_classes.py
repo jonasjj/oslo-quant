@@ -11,10 +11,10 @@ class Order(object):
     def __init__(self, ticker, action, quantity, price=None):
         """
         Args:
-           ticker (markets._classes.Ticker): The ticker
-           action (str): 'buy' or 'sell'
-           quantity (int): The number of shared
-           price (float): Limit price or None for market value
+           ticker(str): The ticker
+           action(str): 'buy' or 'sell'
+           quantity(int): The number of shared
+           price(float): Limit price or None for market value
         """
         self.ticker = ticker
         self.action = action
@@ -43,9 +43,9 @@ class Share(object):
     def __init__(self, ticker, quantity, cost=None):
         """
         Args:
-           ticker (markets._classes.Ticker): The ticker
-           quantity (int): The number of shares (negative for short)
-           cost (float): Optional acquisition cost
+           ticker(str): The ticker
+           quantity(int): The number of shares (negative for short)
+           cost(float): Optional acquisition cost
         """
         self.ticker = ticker
         self.quantity = quantity
@@ -82,22 +82,31 @@ class Strategy(object, metaclass=ABCMeta):
         today shall be returned.
         
         Args:
-           today (datetime.date): Present day
+           today(datetime.date): Present day
 
         Return:
            A list of Order objects
         """
         self.today = today
 
-    def get_instrument(self, name):
+    def get_instrument(self, ticker):
+        """
+        Get an altered version of the instrument which only contains
+        date up till today.
 
-        # get a copy of the ticker object which we can modify
-        ticker = deepcopy(get_instrument(name))
+        Args:
+           ticker(str): Ticker name
+        
+        Return:
+           A deepcopied version of the Instrument object
+        """        
+        # get a copy of the Instrument object which we can modify
+        instrument = deepcopy(get_instrument(ticker))
 
-        row_index = ticker.get_day_index(self.today)
+        row_index = instrument.get_day_index(self.today)
 
         # delete data which is into the future and the strategy now nothing of
-        ticker.data = np.delete(ticker.data, np.s_[row_index + 1:])
+        instrument.data = np.delete(instrument.data, np.s_[row_index + 1:])
         
-        return ticker
+        return instrument
         

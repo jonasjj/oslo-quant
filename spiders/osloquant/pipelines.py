@@ -14,7 +14,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir, "../../python"))
 
 from markets import DATA_DIR
-from markets._classes import Market, Ticker
+from markets._classes import Market, Instrument
 
 class OsloquantPipeline(object):
 
@@ -27,8 +27,8 @@ class OsloquantPipeline(object):
     # This method is called when the spider is closed
     def close_spider(self, spider):
 
-        # sort the market tickers alphabetically
-        self.market.tickers.sort(key=lambda x: x.name)
+        # sort the instruments alphabetically by ticker name
+        self.market.instruments.sort(key=lambda x: x.ticker)
         
         # full path to the pickle file
         path = os.path.join(DATA_DIR, spider.market_name + '.p')
@@ -42,9 +42,9 @@ class OsloquantPipeline(object):
     # This method is called for every item in the pipeline
     def process_item(self, item, spider):
 
-        # create a new Ticker instance and add it to the market
-        ticker = Ticker(item['ticker'], item['name'], item['data'])
-        self.market.tickers.append(ticker)
+        # create a new Instrument instance and add it to the market
+        instrument = Instrument(item['ticker'], item['name'], item['data'])
+        self.market.instruments.append(instrument)
 
         # return the original item, it won't be used anyway
         return item

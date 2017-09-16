@@ -2,19 +2,26 @@ import datetime
 import numpy as np
 
 """
-File containing classes for markets and tickers
+File containing classes for markets and instruments
 """
-class Ticker(object):
-    def __init__(self, name, long_name, data):
-        self.name = name
+
+class Instrument(object):
+    def __init__(self, ticker, long_name, data):
+        """
+        Args:
+           ticker(str): Ticker name
+           long_name(str): Full name
+           data:(numpy.array): Numpy matrix with named columns
+        """
+        self.ticker = ticker
         self.long_name = long_name
         self.data = data
         
     def __str__(self):
-        return self.name
+        return self.ticker
 
     def __repr__(self):
-        return self.name
+        return self.ticker
 
     def get_first_date(self):
         """
@@ -64,7 +71,7 @@ class Ticker(object):
            date (datetime.date)
 
         Return(int):
-           Index of the Ticker.data row matching the date
+           Index of the Instrument.data row matching the date
 
         Raises:
            KeyError if there is no data for this date
@@ -170,4 +177,4 @@ class Market(object):
     def __init__(self, name, long_name):
         self.name = name
         self.long_name = long_name
-        self.tickers = []
+        self.instruments = []

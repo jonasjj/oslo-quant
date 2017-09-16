@@ -9,10 +9,10 @@ from plotting import linked_plot
 def plot(ticker_columns):
     """
     Args:
-       ticker_columns (list): Tickers and ticker data columns to plot.
+       ticker_columns (list): Tickers and ticker  columns to plot.
           This argument must be an iterable on the format:
-             [[instrument_name_a, column_name_a],
-              [instrument_name_b, column_name_b],
+             [[instrument_ticker_a, column_name_a],
+              [instrument_ticker_b, column_name_b],
               ...]          
     """
 
@@ -32,9 +32,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Plot instruments")
 
     parser.add_argument('-i', metavar=("TICKER", "COLUMN"), nargs=2, action='append',
-                        help="Plot column ('open', 'value', etc.) from ticker")
+                    help=("Plot column ('open', 'value', etc.) from ticker."
+                          " Several ticker/column sets may be specified."
+                          " Example: \"-i STL.OSE open -i NAS.OSE open\""))
     args = parser.parse_args()
 
-    plot(args.i)
+    if args.i is None:
+        print("No tickers and columns specified. Try --help")
+    else:
+        plot(args.i)
     
     

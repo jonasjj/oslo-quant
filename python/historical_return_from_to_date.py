@@ -127,13 +127,13 @@ if __name__ == "__main__":
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Find the historical return between dates")
-    parser.add_argument("instrument", help="Instrument name (ex.: OBX.OSE)")
+    parser.add_argument("ticker", help="Ticker name (ex.: OBX.OSE)")
     parser.add_argument("buy_date", help="Buy date: YYYY-MM-DD")
     parser.add_argument("sell_date", help="Sell date: YYYY-MM-DD")
     args = parser.parse_args()
 
     # get the instrument from the database
-    instrument = get_instrument(args.instrument.upper())
+    instrument = get_instrument(args.ticker.upper())
     
     buy_date = parse_date(args.buy_date)
     sell_date = parse_date(args.sell_date)

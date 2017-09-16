@@ -90,20 +90,23 @@ def get_instruments():
     # create a new dict containing all instruments for all markets
     _instruments = {}
     for market in list_of_markets:
-        for ticker in market.tickers:
+        for instrument in market.instruments:
 
             # check that no items are overwritten
-            if ticker.name in market.tickers:
+            if instrument.ticker in market.instruments:
                 raise Exception("There are duplicate instrument names in two of the merged markets")       
             else:
-                _instruments[ticker.name] = ticker
+                _instruments[instrument.ticker] = instrument
             
     return _instruments.copy()
 
-def get_instrument(name):
+def get_instrument(ticker):
     """
-    Get an instrument by name.
+    Get an instrument by ticker name.
     
+    Args:
+       ticker(str): Ticker name
+
     Return:
        An instrument with a unique name from one of the markets.
 
@@ -111,15 +114,15 @@ def get_instrument(name):
        KeyError: On item not found
     """
     instruments = get_instruments()
-    return instruments[name]
+    return instruments[ticker]
 
-def is_trading_day(date, ticker=get_instrument('OBX.OSE')):
+def is_trading_day(date, ticker='OBX.OSE'):
     """
     Check if this is a trading day
     
     Args:
        date(datetime.date): The date to check for
-       ticker: Ticker object to use in check
+       ticker(str): Name of ticker to check for
 
     Return:
        True if the date is a trading day, else False
@@ -127,21 +130,23 @@ def is_trading_day(date, ticker=get_instrument('OBX.OSE')):
     Raises:
        KeyError: On item not found
     """
+    instrument = get_instrument(ticker)
+    
     # If get_day_index() succeeds, this must be a trading day
     try:
-        ticker.get_day_index(date)
+        instrument.get_day_index(date)
         return True
     except KeyError:
         return False
 
-def trading_days(from_date, to_date, ticker=get_instrument('OBX.OSE')):
+def trading_days(from_date, to_date, ticker='OBX.OSE'):
     """
     Find the closed interval of trading days between two dates
 
     Args:
        from_date(datetime.date):
        to_date(datetime.date):
-       ticker: Ticker object to use in check
+       ticker(str): Name of ticker to check for
 
     Yields:
        datetime.date objects
@@ -150,6 +155,6 @@ def trading_days(from_date, to_date, ticker=get_instrument('OBX.OSE')):
     date = from_date
 
     while date <= to_date:
-        if is_trading_day(date):
+        if is_trading_day(date, ticker):
             yield date
         date += datetime.timedelta(days=1)

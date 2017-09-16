@@ -36,7 +36,7 @@ def brokerage(order):
 
 def simulate(strategy, money, from_date, to_date):
 
-    # share holding positions {ticker_name: Share,}
+    # share holding positions {ticker: Share,}
     portfolio = {}
 
     # for all trading days between the two dates
@@ -48,11 +48,11 @@ def simulate(strategy, money, from_date, to_date):
         # process the orders
         for order in orders:
 
-            # make sure we have the full ticker object
-            ticker = get_instrument(str(order.ticker))
+            # get the instrument object
+            instrument = get_instrument(order.ticker)
 
-            # the the market date for this ticker for this date
-            ticker_day = ticker.get_day(today)
+            # the the market date for this instrument for this date
+            ticker_day = instrument.get_day(today)
 
             # assume orders get filled at best price
             if order.action == 'buy':

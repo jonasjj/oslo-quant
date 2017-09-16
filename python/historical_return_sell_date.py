@@ -96,7 +96,7 @@ if __name__ == "__main__":
     
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Plot historical return when selling at a particular date")
-    parser.add_argument("instrument", help="Instrument name (ex.: OBX.OSE")
+    parser.add_argument("ticker", help="Ticker name (ex.: OBX.OSE)")
     parser.add_argument("sell_date", help="Sell date: YYYY-MM-DD")
     parser.add_argument("--variance",
                         action='store_true',
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # get the instrument from the database
-    instrument = get_instrument(args.instrument.upper())
+    instrument = get_instrument(args.ticker.upper())
 
     sell_date = parse_date(args.sell_date)
 
@@ -139,27 +139,27 @@ if __name__ == "__main__":
 
     plot_inputs.append((matrix,
                         'avg_gain',
-                        "Average gain ratio for " + instrument.name + \
+                        "Average gain ratio for " + instrument.ticker + \
                         ", years averaged: " + str(res['year_count']) + \
                         ", sell date: " + str(sell_date)))
 
     plot_inputs.append((matrix,
                         'pos_gain',
-                        "Positive gain ratio for " + instrument.name + \
+                        "Positive gain ratio for " + instrument.ticker + \
                         ", years averaged: " + str(res['year_count']) + \
                         ", sell date: " + str(sell_date)))
 
     if args.variance:
         plot_inputs.append((matrix,
                             'variance',
-                            "Variance for " + instrument.name + \
+                            "Variance for " + instrument.ticker + \
                             ", years averaged: " + str(res['year_count']) + \
                             ", sell date: " + str(sell_date)))
 
     if args.std_deviation:
         plot_inputs.append((matrix,
                             'std_deviation',
-                            "Standard deviation for " + instrument.name + \
+                            "Standard deviation for " + instrument.ticker + \
                             ", years averaged: " + str(res['year_count']) + \
                             ", sell date: " + str(sell_date)))
                        

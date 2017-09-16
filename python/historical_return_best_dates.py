@@ -123,7 +123,7 @@ if __name__ == "__main__":
     
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Find the best dates to buy an sell")
-    parser.add_argument("instrument", help="Instrument name (ex.: OBX.OSE)")
+    parser.add_argument("ticker", help="Ticker name (ex.: OBX.OSE)")
     parser.add_argument("days_between", type=int, help="Days between buy and sell")
     parser.add_argument("--avg_gain",
                         action='store_true',
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # get the instrument from the database
-    instrument = get_instrument(args.instrument.upper())
+    instrument = get_instrument(args.ticker.upper())
 
     # run the algorithm
     res = historical_return_dates(instrument, args.days_between, average_days=args.avg)
@@ -211,7 +211,7 @@ if __name__ == "__main__":
         if args.avg_gain:
             plot_inputs.append((matrix, 'avg_gain',
                                 "Average gain ratio for " +
-                                instrument.name + average_days_string +
+                                instrument.ticker + average_days_string +
                                 ", years averaged: " + str(res['year_count'])))
 
         # add positive gain ratio to plot
