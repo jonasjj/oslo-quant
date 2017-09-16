@@ -30,10 +30,10 @@ class Order(object):
         if self.price is None:
             s += " at market price"
         else:
-            s += " limit: " + str(self.price)
+            s += ", limit: " + str(self.price)
 
         if self.filled:
-            s += " filled: " + str(self.filled_price)
+            s += ", filled: " + str(self.filled_price)
             
         return s
         
@@ -61,7 +61,7 @@ class Strategy(object, metaclass=ABCMeta):
 
         Args:
            money(float): Initial liquid assets
-           portfolio: List of Share objects represening
+           portfolio: Dict of Share objects represening
                       the intital share holding positions
            from_date(datetime.date): First daty of the simulation
            to_date(datetime.date): Last day of the simulation

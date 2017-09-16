@@ -7,8 +7,37 @@ import sys
 from historical_return_from_to_date import parse_date
 from markets import trading_days
 from markets import get_instrument
+from strategy import Share
 
-def simulate(strategy, from_date, to_date):
+def brokerage(order):
+    """
+    Calculate the brokerage for an order
+
+    Args:
+       order(Strategy.Order):
+    
+    Return:
+       Brokerage fees for filling the order
+    """
+    # Nordnet Mini
+    minimum = 49
+    percentage = 0.15
+    
+    # Nordnet Normal
+    #minimum = 99
+    #percentage = 0.049
+
+    ratio = percentage / 100.0
+    cost = ratio * order.quantity * order.price
+    if cost < minimum:
+        cost = minimum
+
+    return cost
+
+def simulate(strategy, money, from_date, to_date):
+
+    # share holding positions {ticker_name: Share,}
+    portfolio = {}
 
     # for all trading days between the two dates
     for today in trading_days(from_date, to_date):
@@ -24,8 +53,6 @@ def simulate(strategy, from_date, to_date):
 
             # the the market date for this ticker for this date
             ticker_day = ticker.get_day(today)
-
-            order_filled = False
 
             # assume orders get filled at best price
             if order.action == 'buy':
@@ -45,8 +72,22 @@ def simulate(strategy, from_date, to_date):
             else:
                 raise Exception("Order.action is neither 'sell' nor 'buy'")
 
-            if order.filled_price:
-                print(order)                
+            cost = order.quantity * order.price
+            fees = brokerage(order)
+
+            money -= cost
+            money -= fees
+
+            # calculate the current market value
+            #market_value = money
+            #for s in portfolio:
+            #    get_instrument()
+
+            # print a message
+            s = str(order)
+            if(order.filled):
+                s += ", fees: %.0f, cost: %.0f, money: %.0f" % (fees, cost, money)            
+            print(s)
 
 if __name__ == "__main__":
 
@@ -76,8 +117,10 @@ if __name__ == "__main__":
     from_date = parse_date(args.from_date)
     to_date = parse_date(args.to_date)
 
+    money = float(args.money)
+
     # create the strategy instance
-    strategy = strategy_class(args.money, [], from_date, to_date)
+    strategy = strategy_class(money, [], from_date, to_date)
     
     # run the simulation
-    simulate(strategy, from_date, to_date)
+    simulate(strategy, money, from_date, to_date)
