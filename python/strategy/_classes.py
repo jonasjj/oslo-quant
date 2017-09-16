@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 
 from markets import get_instrument
+from . import broker
 
 class Order(object):
     """An order recommendation"""
@@ -21,35 +22,55 @@ class Order(object):
         self.quantity = quantity
         self.price = price
         self.filled = False
-        self.filled_price = -999999.0
+        self.filled_price = None
+        self.cost = None
         
     def __str__(self):
         s = "%s %s %s" % (self.action, self.quantity, self.ticker)
         
         # check if self.price is defined
         if self.price is None:
-            s += " at market price"
+            s += ", market price"
         else:
             s += ", limit: " + str(self.price)
 
         if self.filled:
             s += ", filled: " + str(self.filled_price)
+            s += ", cost: " + str(self.cost)
+            s += ", brokerage: " + str(self.brokerage)
+            s += ", total: " + str(self.total)
+        else:
+            s += ", open"
             
         return s
         
+    def fill(self, filled_price):
+        """
+        Fill this order.
+        Typically this function will be called by the simulator.
+
+        Args:
+           filled_price(float): The matched price for this order
+        """
+        self.filled_price = filled_price
+        self.filled = True
+        self.brokerage = broker.calculate_brokerage(self)
+        self.cost = self.quantity * self.filled_price
+        self.total = self.cost + self.brokerage
+
 class Share(object):
     """A share holding position"""
 
-    def __init__(self, ticker, quantity, cost=None):
+    def __init__(self, ticker, quantity, price):
         """
         Args:
            ticker(str): The ticker
            quantity(int): The number of shares (negative for short)
-           cost(float): Optional acquisition cost
+           price(float): The purchase price per share
         """
         self.ticker = ticker
         self.quantity = quantity
-        self.cost = cost
+        self.price = price
 
     def get_value(date):
         """

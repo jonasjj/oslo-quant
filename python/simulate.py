@@ -8,55 +8,7 @@ from historical_return_from_to_date import parse_date
 from markets import trading_days
 from markets import get_instrument
 from strategy import Share
-
-# The maximum owned assets divided by the portifolio value
-MAX_LOAN_RATIO = 0.5
-
-def calculate_interest(balance):
-    """
-    Calculate the interest for an account balance for 1 day
-    
-    Args:
-       balance(float): The money in the account
-
-    Return:
-       The owed or allowed interest
-    """
-    # Nordnet Mini / Normal / Bonus
-    annual_loan_interest_rate_percentage = -0.0605
-    annual_deposit_interest_rate_percentage = 0.0
-
-    if balance < 0:
-        interest_percentage = annual_loan_interest_rate_percentage
-    else:
-        interest_percentage = annual_deposit_interest_rate_percentage
-
-    return ((interest_percentage / 100.0) / 365.0) * balance
-
-def calculate_brokerage(order):
-    """
-    Calculate the brokerage for an order
-
-    Args:
-       order(Strategy.Order):
-    
-    Return:
-       Brokerage fees for filling the order
-    """
-    # Nordnet Mini
-    minimum = 49
-    percentage = 0.15
-    
-    # Nordnet Normal
-    #minimum = 99
-    #percentage = 0.049
-
-    ratio = percentage / 100.0
-    cost = ratio * order.quantity * order.price
-    if cost < minimum:
-        cost = minimum
-
-    return cost
+from strategy import broker
 
 def simulate(strategy, money, from_date, to_date):
 
@@ -81,35 +33,22 @@ def simulate(strategy, money, from_date, to_date):
             # assume orders get filled at best price
             if order.action == 'buy':
                 if order.price is None:
-                    order.filled = True
-                    order.filled_price = ticker_day['low']
+                    order.fill(ticker_day['low'])
                 elif ticker_day['low'] <= order.price:
-                    order.filled = True
-                    order.filled_price = ticker_day['low']
+                    order.fill(ticker_day['low'])
             elif order.action == 'sell':
                 if order.price is None:
-                    order.filled = True
-                    order.filled_price = ticker_day['high']
+                    order.fill(ticker_day['high'])
                 elif ticker_day['high'] >= order.price:
-                    order.filled = True
-                    order.filled_price = ticker_day['high']
+                    order.fill(ticker_day['high'])
             else:
                 raise Exception("Order.action is neither 'sell' nor 'buy'")
 
-            cost = order.quantity * order.price
-            brokerage = calculate_brokerage(order)
-            interest = calculate_interest(money)
-
-            money -= cost
-            money -= brokerage
+            if order.filled:
+                money -= order.total
+            
+            interest = broker.calculate_interest(money)
             money += interest
-
-            # print a message
-            s = str(order)
-            if(order.filled):
-                s += ", brokerage: %.0f, cost: %.0f, interest: %.0f, money: %.0f" % \
-                     (brokerage, cost, interest, money)
-            print(s)
 
         # calculate the current market value
         portfolio_value = money
@@ -117,7 +56,15 @@ def simulate(strategy, money, from_date, to_date):
             share_value = share.get_value(today)
             portfolio_value += share_value
 
+        # the total value of the account
         account_value = money + portfolio_value
+
+        # print a message summary of today
+        print("%s: account_value: %.0f, money: %.0f, interest: %.0f" % \
+              (str(today), account_value, money, interest))
+        indent = len(str(today)) + 2
+        for order in orders:
+            print(' ' * indent + str(order))
             
 if __name__ == "__main__":
 
