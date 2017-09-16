@@ -49,7 +49,31 @@ class Share(object):
         """
         self.ticker = ticker
         self.quantity = quantity
-        self.cost = cost    
+        self.cost = cost
+
+    def get_value(date):
+        """
+        Get the closing value of an instrument at a given date
+        The closing value will be used if it exists,
+        otherwise the 'value' field will be used.
+        Nasdaq OMX data typical doesn't have closing values.
+
+        Args:
+           date(datetime.date): Date to get value for
+
+        Return:
+           The monetary value of the asset
+        """
+        instrument = get_instrument(self.ticker)
+        day_data = instrument.get_day(date)
+
+        # preferably use the 'close' field, then the 'value' field
+        try:
+            current_price = day_data['close']
+        except KeyError:
+            current_price = day_data['value']
+
+        return self.quantity * current_price
         
 class Strategy(object, metaclass=ABCMeta):
     """Base class for all strategies"""

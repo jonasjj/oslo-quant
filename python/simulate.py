@@ -78,17 +78,20 @@ def simulate(strategy, money, from_date, to_date):
             money -= cost
             money -= fees
 
-            # calculate the current market value
-            #market_value = money
-            #for s in portfolio:
-            #    get_instrument()
-
             # print a message
             s = str(order)
             if(order.filled):
                 s += ", fees: %.0f, cost: %.0f, money: %.0f" % (fees, cost, money)            
             print(s)
 
+        # calculate the current market value
+        market_value = money
+        for share in portfolio:
+            share_value = share.get_value(today)
+            market_value += share_value
+
+        print("Market value: ", market_value)
+            
 if __name__ == "__main__":
 
     # parse command line arguments
