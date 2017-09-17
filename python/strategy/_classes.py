@@ -72,7 +72,7 @@ class Share(object):
         self.quantity = quantity
         self.price = price
 
-    def get_value(date):
+    def get_value(self, date):
         """
         Get the closing value of an instrument at a given date
         The closing value will be used if it exists,

@@ -2,8 +2,8 @@
 This file contains cost models for the stockbroker (bank)
 """
 
-# The maximum owned assets divided by the portifolio value
-MAX_LOAN_RATIO = 0.5
+# The minimum loan-to-value-ratio
+MIN_LOAN_TO_VALUE_RATIO = 0.5
 
 def calculate_interest(balance):
     """
@@ -50,3 +50,23 @@ def calculate_brokerage(order):
         cost = minimum
 
     return cost
+
+def calculate_loan_ratio(account_value, portfolio_value):
+    """ Calculate the loan-to-value ratio for an account
+
+    Args:
+       account_value(float):
+       portfolio_value(float):
+    
+    Return(float):
+       A value between 0 and 1.0
+       1.0 means no loans, and 0.0 means that all assets are loaned
+    """
+    if account_value <= 0:
+        raise Exception("The account value is negative or zero")
+    elif account_value > portfolio_value:
+        return 1.0
+    else:
+        return account_value / portfolio_value
+
+

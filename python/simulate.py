@@ -45,6 +45,18 @@ def simulate(strategy, money, from_date, to_date):
                 raise Exception("Order.action is neither 'sell' nor 'buy'")
 
             if order.filled:
+                # update the Share object if it exists for this ticker
+                try:
+                    share = portfolio[order.ticker]
+                    new_quantity = share.quantity + order.quantity
+                    share.price = ((share.quantity * share.price) + \
+                                   (order.quantity * order.price)) / new_quantity
+                    share.quantity = new_quantity
+                except KeyError:
+                    # create a new share object
+                    share = Share(order.ticker, order.quantity, order.filled_price)
+                    portfolio[order.ticker] = share
+                
                 money -= order.total
             
             interest = broker.calculate_interest(money)
@@ -52,12 +64,16 @@ def simulate(strategy, money, from_date, to_date):
 
         # calculate the current market value
         portfolio_value = money
-        for share in portfolio:
+        for share in portfolio.values():
             share_value = share.get_value(today)
             portfolio_value += share_value
 
         # the total value of the account
         account_value = money + portfolio_value
+        
+        loan_ratio = broker.calculate_loan_ratio(account_value, portfolio_value)
+        if loan_ratio < broker.MIN_LOAN_TO_VALUE_RATIO:
+            raise Exception("Loan-to-value-ratio is too low: " + str(loan_ratio))
 
         # print a message summary of today
         print("%s: account_value: %.0f, money: %.0f, interest: %.0f" % \
