@@ -10,7 +10,7 @@ The [Scrapy](https://scrapy.org/) framework is used for the web scraping.
 ## How to install dependencies on a fresh Ubuntu 17.04 installation
 ```
 sudo apt-get install python3-numpy
-sudo apt-get install python3-pyqt4
+sudo apt-get install python3-pyqt5
 sudo apt-get install python3-pyqtgraph
 sudo apt-get install python3-progressbar
 sudo apt-get install python3-tabulate
