@@ -144,14 +144,24 @@ class Strategy(object, metaclass=ABCMeta):
         
         Return:
            A deepcopied version of the Instrument object
-        """        
+
+        Raises:
+           ValueError: If the ticker doesn't exist for this date.
+                       For instance when trying to get 'NAS.OSE'
+                       and today's date is before 2003-12-18.
+        """
         # get a copy of the Instrument object which we can modify
         instrument = deepcopy(get_instrument(ticker))
 
+        # Check that this ticker existed at today's date
+        first_date = instrument.get_first_date()
+        if self.today < first_date:
+            raise ValueError("'" + ticker + "' didn't exist at " + str(self.today) + \
+                             ", first date is " + str(first_date))
+        
         row_index = instrument.get_day_index(self.today)
 
         # delete data which is into the future and the strategy now nothing of
         instrument.data = np.delete(instrument.data, np.s_[row_index + 1:])
-        
+
         return instrument
-        
