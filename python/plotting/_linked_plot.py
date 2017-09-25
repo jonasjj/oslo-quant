@@ -1,6 +1,5 @@
 import sys
-from PyQt5 import QtWidgets, QtCore
-from pyqtgraph.Qt import QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore
 import pyqtgraph as pg
 from setproctitle import setproctitle
 import datetime
