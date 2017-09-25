@@ -1,5 +1,5 @@
 import sys
-from PyQt4.QtGui import QApplication, QWidget, QVBoxLayout, QLabel
+from PyQt5 import QtWidgets, QtCore
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 from setproctitle import setproctitle
@@ -326,7 +326,7 @@ def linked_plot(inputs, window_title=''):
            window_title(str): Title of the window
     """
     setproctitle("nordnetbot-linkedplot")
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     lw = LinkedPlotWidget(inputs, window_title)
 
     # install signal handler
