@@ -116,6 +116,18 @@ def get_instrument(ticker):
     instruments = get_instruments()
     return instruments[ticker]
 
+def get_tickers():
+    """
+    Get a list of all the tickers in all markets sorted alphabetically
+    
+    Return:
+       A list of str
+    """
+    instruments = get_instruments()
+    tickers = list(instruments)
+    tickers.sort()
+    return tickers
+
 def is_trading_day(date, ticker='OBX.OSE'):
     """
     Check if this is a trading day

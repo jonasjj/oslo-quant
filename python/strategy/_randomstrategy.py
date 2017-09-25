@@ -10,6 +10,8 @@ class RandomStrategy(Strategy):
 
         ticker = 'OBX.OSE'
 
+        self.get_tickers()
+        
         order = Order(ticker, "buy", 100, 630.0)
         
         return [order]

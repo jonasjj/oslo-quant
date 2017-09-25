@@ -99,6 +99,35 @@ class Instrument(object):
             # There must be something wrong in the database, which one should we return?
             raise Exception("There was more than one matching row")
 
+    def get_day_index_or_last_before(self, date):
+        """
+        Get index of the row in data matching a specific date,
+        or get index of the previous preceding date if there were no trades this date.
+        
+        Args:
+           date (datetime.date)
+
+        Return(int):
+           Index of the Instrument.data row matching the date
+
+        Raises:
+           KeyError if there is no data for this date or earlier dates
+        """
+        # convert to timestamp
+        timestamp = datetime.datetime(date.year, date.month, date.day).timestamp()
+
+        matches = np.where(self.data['date'] <= timestamp)[0]
+        match_count = len(matches)
+        
+        # no matching rows
+        if match_count == 0:
+            raise KeyError("Date not found: " + str(date))
+        
+        else:
+            # get the index of the last matching row
+            row_index = matches[-1]
+            return row_index
+        
     def get_day(self, date):
         """
         Get the data for a specific date.
