@@ -1,6 +1,11 @@
 from ._classes import Strategy, Order
 
+import random
+
 class RandomStrategy(Strategy):
+    """
+    This strategy is used for testing the simulator
+    """
 
     def __init__(self, money, portfolio, from_date, to_date):
         super().__init__(money, portfolio, from_date, to_date)
@@ -8,9 +13,9 @@ class RandomStrategy(Strategy):
     def execute(self, today):
         super().execute(today)
 
-        ticker = 'OBX.OSE'
-
-        self.get_tickers()
+        # select a random ticker
+        tickers = self.get_tickers()
+        ticker = random.choice(tickers)
         
         order = Order(ticker, "buy", 100, 630.0)
         

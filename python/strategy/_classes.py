@@ -86,7 +86,9 @@ class Share(object):
            The monetary value of the asset
         """
         instrument = markets.get_instrument(self.ticker)
-        day_data = instrument.get_day(date)
+        
+        # if this date doesn't have any data, assume its worth the last known value
+        day_data = instrument.get_day_or_last_before(date)
 
         # preferably use the 'close' field, then the 'value' field
         try:

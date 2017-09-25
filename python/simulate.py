@@ -23,15 +23,23 @@ def simulate(strategy, money, from_date, to_date):
 
         # process the orders
         for order in orders:
-
+            
             # get the instrument object
             instrument = get_instrument(order.ticker)
 
-            # the the market date for this instrument for this date
-            ticker_day = instrument.get_day(today)
+            # get the market date for this instrument for this date
+            try:
+                ticker_day = instrument.get_day(today)
+            except KeyError:
+                ticker_day = None
 
+            # If there was no trading for this ticker on this date
+            # we're going to assume that this trade wasn't filled
+            if ticker_day is None:
+                pass
+            
             # assume orders get filled at best price
-            if order.action == 'buy':
+            elif order.action == 'buy':
                 if order.price is None:
                     order.fill(ticker_day['low'])
                 elif ticker_day['low'] <= order.price:

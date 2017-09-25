@@ -85,7 +85,7 @@ class Instrument(object):
 
         # no matching rows
         if match_count == 0:
-            raise KeyError("Date not found :" + str(date))
+            raise KeyError(str(self) + ": date not found: " + str(date))
 
         # if there was exactly one matching row
         elif match_count == 1:
