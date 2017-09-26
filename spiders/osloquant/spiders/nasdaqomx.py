@@ -117,10 +117,18 @@ class NasdaqOmxSpider(scrapy.Spider):
         # populate the matrix with the extracted data
         for row_num, row in enumerate(rows):
 
-            # convert to timestamp
+            # convert to datetime.datetime
             match = re.search(r"Date\((.*)\)", row['TimeStamp'])
-            date = datetime.datetime.fromtimestamp(float(match.group(1))/1000.0).timestamp()
+            parsed_date = datetime.datetime.fromtimestamp(float(match.group(1))/1000.0)
 
+            # Strip hours and minutes from the date string.
+            # It has been observed that some tickers have an hour offset to the timestamp.
+            # For example OMXC25DVP: datetime.datetime(2017, 1, 2, 6, 0)
+            stripped_date = datetime.datetime(parsed_date.year, parsed_date.month, parsed_date.day)
+            
+            # convert to timestamp
+            date = stripped_date.timestamp()
+            
             # convert to float, None values will be converted to 0.0
             value = 0.0 if row['Value'] is None else float(row['Value'])
             high = 0.0 if row['High'] is None else float(row['High'])

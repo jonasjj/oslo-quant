@@ -121,7 +121,8 @@ class Instrument(object):
         
         # no matching rows
         if match_count == 0:
-            raise KeyError("Date not found: " + str(date))
+            raise KeyError(str(self) + ": Date not found: " + str(date) + \
+                           ", first date is " + str(self.get_first_date()))
         
         else:
             # get the index of the last matching row
