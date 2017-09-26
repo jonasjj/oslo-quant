@@ -16,6 +16,12 @@ class RandomStrategy(Strategy):
         # select a random ticker
         tickers = self.get_tickers()
         ticker = random.choice(tickers)
+
+        instrument = self.get_instrument(ticker)
+        
+        action = random.choice(["buy", "sell"])
+        quantity = random.randint(1,100)
+        price = instrument.get_price(today)
         
         order = Order(ticker, "buy", 100, 630.0)
         

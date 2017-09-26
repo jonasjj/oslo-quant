@@ -203,6 +203,40 @@ class Instrument(object):
 
             return self._get_row(row_index)
 
+    def get_price(self, date):
+        """
+        Get price at this date
+        
+        The 'open' price will be used,
+        otherwise the 'value' price will be used.
+        Typically, Nasdaq OMX data doesn't have 'open', but 'value'
+
+        If there is no data for this date, the last known 'close' value
+        will be used, or 'value' if it doesn't exist.
+
+        Return:
+           A price estimate for today
+        """
+        day_data = self.get_day_or_last_before(date)
+
+        # if the data is for the requested date
+        if day_data['date'] == date:
+
+            # try to use the open price
+            try:
+                return day_data['open']
+            except:
+                return day_data['value']
+
+        # if this data belongs to an earlier date
+        else:
+
+            # try to use the close price
+            try:
+                return day_data['close']
+            except:
+                return day_data['value']
+            
 class Market(object):
     def __init__(self, name, long_name):
         self.name = name
