@@ -3,21 +3,27 @@
 
 import argparse
 import sys
+import numpy as np
+import datetime
 
 from historical_return_from_to_date import parse_date
 from markets import trading_days
 from markets import get_instrument
 from strategy import Share
 from strategy import broker
+from plotting import linked_plot
 
 def simulate(strategy, money, from_date, to_date):
 
     # share holding positions {ticker: Share,}
     portfolio = {}
 
+    # log what the strategy is doing by appending tuples:
+    strategy_log = []
+
     # for all trading days between the two dates
     for today in trading_days(from_date, to_date):
-
+        
         # run the strategy for this date
         orders = strategy.execute(today)
 
@@ -83,12 +89,60 @@ def simulate(strategy, money, from_date, to_date):
         if loan_ratio < broker.MIN_LOAN_TO_VALUE_RATIO:
             raise Exception("Loan-to-value-ratio is too low: " + str(loan_ratio))
 
+        # add an entry to the log for today
+        strategy_log.append((today,
+                             account_value,
+                             money,
+                             portfolio_value,
+                             loan_ratio))
+        
         # print a message summary of today
         print("%s: account_value: %.0f, money: %.0f, interest: %.0f" % \
               (str(today), account_value, money, interest))
         indent = len(str(today)) + 2
         for order in orders:
             print(' ' * indent + str(order))
+
+
+    # create empty numpy matrix with room for all log data
+    matrix = np.zeros(shape=len(strategy_log),
+                      dtype=[('date', 'f8'),
+                             ('account_value', 'f8'),
+                             ('money', 'f8'),
+                             ('portfolio_value', 'f8'),
+                             ('loan_ratio', 'f8')])
+
+    # construct numpy matrix
+    for i, row in enumerate(strategy_log):
+
+        # convert to Unix timestamp
+        date = row[0]
+        dt = datetime.datetime(date.year, date.month, date.day)
+        timestamp = dt.timestamp()
+        
+        matrix[i] = timestamp, *row[1:]
+        
+    # create input data for the linked plots
+    plot_inputs = []
+
+    # add account value to the plot
+    plot_inputs.append((matrix,
+                        'account_value',
+                        "Account value"))
+
+    # add liquid funds to the plot to the plot
+    plot_inputs.append((matrix,
+                        'money',
+                        "Liquid funds (money)"))
+
+    # add liquid funds to the plot to the plot
+    plot_inputs.append((matrix,
+                        'portfolio_value',
+                        "Portfolio value (equity)"))
+    
+
+    # create the plot
+    linked_plot(plot_inputs, window_title=str(strategy))
             
 if __name__ == "__main__":
 

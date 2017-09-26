@@ -118,6 +118,12 @@ class Strategy(object, metaclass=ABCMeta):
         self.from_date = from_date
         self.to_date = to_date
 
+    def __str__(self):
+        """
+        Return the name of the subclass
+        """
+        return self.__class__.__name__
+        
     @abstractmethod
     def execute(self, today):
         """
