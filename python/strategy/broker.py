@@ -45,7 +45,7 @@ def calculate_brokerage(order):
     #percentage = 0.049
 
     ratio = percentage / 100.0
-    cost = ratio * order.quantity * order.price
+    cost = ratio * order.quantity * order.filled_price
     if cost < minimum:
         cost = minimum
 

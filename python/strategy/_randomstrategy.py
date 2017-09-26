@@ -18,11 +18,14 @@ class RandomStrategy(Strategy):
         ticker = random.choice(tickers)
 
         instrument = self.get_instrument(ticker)
-        
+
+        # random input
         action = random.choice(["buy", "sell"])
         quantity = random.randint(1,100)
         price = instrument.get_price(today)
+        if random.random() < 0.2:
+            price = None
         
-        order = Order(ticker, "buy", 100, 630.0)
+        order = Order(ticker, action, quantity, price)
         
         return [order]

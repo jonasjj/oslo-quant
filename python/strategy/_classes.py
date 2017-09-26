@@ -32,13 +32,13 @@ class Order(object):
         if self.price is None:
             s += ", market price"
         else:
-            s += ", limit: " + str(self.price)
+            s += ", limit: " + str(round(self.price, 2))
 
         if self.filled:
-            s += ", filled: " + str(self.filled_price)
-            s += ", cost: " + str(self.cost)
-            s += ", brokerage: " + str(self.brokerage)
-            s += ", total: " + str(self.total)
+            s += ", filled: " + str(round(self.filled_price, 2))
+            s += ", cost: " + str(round(self.cost, 2))
+            s += ", brokerage: " + str(round(self.brokerage, 2))
+            s += ", total: " + str(round(self.total, 2))
         else:
             s += ", open"
             
