@@ -69,10 +69,18 @@ def historical_return_from_to_date(instrument, buy_date, sell_date):
         
     
     while _sell_date <= last_date:
-        year_count += 1
 
         buy = instrument.get_day_or_first_after(_buy_date)
         sell = instrument.get_day_or_first_after(_sell_date)
+
+        # sanity checking of the input data
+        if buy[value_key] == 0 or sell[value_key] == 0:
+            _buy_date = _buy_date.replace(year=_buy_date.year + 1)
+            _sell_date = _sell_date.replace(year=_sell_date.year + 1)
+            continue
+            raise Exception("Value is 0. The input data is erroneous")
+
+        year_count += 1
 
         gain = sell[value_key] - buy[value_key]
         gain_ratio = (sell[value_key] / buy[value_key]) - 1
@@ -81,12 +89,7 @@ def historical_return_from_to_date(instrument, buy_date, sell_date):
         accumulated_gain_ratio += gain_ratio
 
         if gain > 0:
-            pos_gain_trades += 1
-
-        # sanity checking of the input data
-        if buy[value_key] == 0 or sell[value_key] == 0:
-            raise Exception("Value is 0. The input data is erroneous")
-        
+            pos_gain_trades += 1        
         
         trade=OrderedDict()
         trade['buy_date'] = buy['date']

@@ -103,25 +103,12 @@ def simulate(strategy, money, from_date, to_date):
         for order in orders:
             print(' ' * indent + str(order))
 
-
-    # create empty numpy matrix with room for all log data
-    matrix = np.zeros(shape=len(strategy_log),
-                      dtype=[('date', 'f8'),
-                             ('account_value', 'f8'),
-                             ('money', 'f8'),
-                             ('portfolio_value', 'f8'),
-                             ('loan_ratio', 'f8')])
-
-    # construct numpy matrix
-    for i, row in enumerate(strategy_log):
-
-        # convert to Unix timestamp
-        date = row[0]
-        dt = datetime.datetime(date.year, date.month, date.day)
-        timestamp = dt.timestamp()
-        
-        matrix[i] = timestamp, *row[1:]
-        
+    matrix = np.array(strategy_log, dtype=[('date', 'O'),
+                                           ('account_value', 'f8'),
+                                           ('money', 'f8'),
+                                           ('portfolio_value', 'f8'),
+                                           ('loan_ratio', 'f8')])
+    
     # create input data for the linked plots
     plot_inputs = []
 
