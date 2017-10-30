@@ -65,17 +65,18 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         plot.addItem(v_line, ignoreBounds=True)
         plot.addItem(h_line, ignoreBounds=True)
 
+        # TODO: should we make a function out of this?
         # vertical line for showing the time position of an event
         #event_line = pg.InfiniteLine(angle=90, movable=False)
         #event_line.setPen(QtGui.QColor(168, 34, 3))
         #plot.addItem(event_line, ignoreBounds=True)
+        #plot.event_line = event_line
 
         plot.scene().sigMouseMoved.connect(self.mouse_moved)
 
         # store references to these things in the PlotView object
         plot.v_line = v_line
         plot.h_line = h_line
-        #plot.event_line = event_line
 
         # the text responsible for showing the y value where the vertical line is
         value_text = pg.TextItem(anchor=(0.5, 0))
@@ -115,15 +116,23 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             # use the array as-is because there's no need to convert the date column
             date_array = numpy_array
 
+        try:
+            color = self.parent_plot.nice_colors.pop(0)
+        except IndexError:
+            raise IndexError(
+                "All predefined colors have been used for this plot")
+
         # create the subplot
         plot = self.parent_plot.plot(row=self.plot_row_counter,
                                      col=0,
-                                     pen=self.parent_plot.nice_colors.pop(
-                                         0),  # TODO avoid pop empty
+                                     pen=color,
                                      y=numpy_array[y_axis_name],
                                      x=date_array['date'])
 
+        # the subplot name will appear in the legend
         plot.name = self.parent_plot.name + "_" + y_axis_name
+
+        # connect the mouse moved listener
         plot.scene().sigMouseMoved.connect(self.mouse_moved)
 
         # link the y-axes of the time series in this plot
@@ -146,18 +155,20 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             self.remove_plot(pl_title)
         self.first_plot = None
 
-    def add_marker(self, plot_title, date, angle=-90, text="", color='blue'):
+    def add_marker(self, plot_title, y_axis_name, date, angle=-90, text="", color='blue'):
         """
         Add a marker to a plot
 
         Args:
-           plot_title (str): The plot title to add a marker to
+           plot_title (str): The name of the plot
+           y_axis_name(str): The name of the subplot to attach the marker to
            date (datetime.date): x-axis date to add a marker to
            angle (int): Angle of the arrow marker. -90 is top down.
            color (str): 'blue', 'green', or 'red'
 
         Raises:
            IndexError: If the date isn't present in the data set
+           KeyError: If the plot or subplot isn't found
         """
         # get the plot
         try:
@@ -173,7 +184,17 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             # try to use the the value as is
             timestamp = date
 
-        ld = pl.listDataItems()[0]
+        # name of the subplot to look for
+        name = plot_title + "_" + y_axis_name
+
+        # find the subplot
+        for ld in pl.listDataItems():
+            if ld.name == name:
+                break
+
+        # if we didn't break out of the loop
+        else:
+            raise KeyError('Could not find a subplot named "' + name + "'")
 
         # get the index containing the nearest timestamp value for this x position
         x_data = ld.getData()[0]
@@ -323,13 +344,6 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                     x_data = data[0]
                     y_data = data[1]
 
-                    # TODO: this is the subplot. Make a loop or something here
-                    # ld2 = pl.listDataItems()[1]
-                    # data2 = ld2.getData()
-                    # print(data2[0])
-                    # print(data2[1])
-                    # print(ld2.name)
-
                     # get the index containing the nearest timestamp value for this x position
                     x_index = (np.abs(x_data - x_mouse)).argmin()
 
@@ -387,6 +401,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         super().mouseReleaseEvent(event)
         self.mouse_released_signal.emit()
 
+
 class LinkedPlot():
     """
     Create a windows of linked plots using LinkedPlotWidget
@@ -415,8 +430,7 @@ class LinkedPlot():
         self.linked_plot_widget.show()
         sys.exit(self.app.exec_())
 
-    def add_marker(self, plot_title, date, angle=-90, text="", color='blue'):
-        self.linked_plot_widget.add_marker(plot_title, date, angle, text, color)
-
-    
-
+    def add_marker(self, plot_title, y_axis_name, date,
+                   angle=-90, text="", color='blue'):
+        self.linked_plot_widget.add_marker(
+            plot_title, y_axis_name, date, angle, text, color)
