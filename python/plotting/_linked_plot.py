@@ -371,9 +371,8 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
                         # set the y value at the vertical line on this plot at the x position
                         text += "<span style='color: rgb%s'>%s=%s</span><br>" % (
-                            color, pl.name, str(round(y, 4)))
+                            color, ld.name, str(round(y, 4)))
 
-                print(pl.name)
                 pl.value_text.setHtml(text)
 
         else:

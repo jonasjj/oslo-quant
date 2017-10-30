@@ -4,7 +4,7 @@
 import argparse
 
 from markets import get_instrument
-from plotting import linked_plot
+from plotting import LinkedPlot
 
 def plot(ticker_columns):
     """
@@ -16,15 +16,19 @@ def plot(ticker_columns):
               ...]          
     """
 
-    # create linked_plot() arguments
-    l = []
-    for instrument_name, column_name in ticker_columns:
-        instrument = get_instrument(instrument_name.upper())
-        plot_title = instrument_name.upper() + "_" + column_name
-        l.append((instrument.data, column_name, plot_title))
+    linked_plot = LinkedPlot(window_title="plot_instrument.py")
 
-    # create the plot
-    linked_plot(l)
+    # add plots to the main window
+    for instrument_name, column_name in ticker_columns:
+
+        instrument = get_instrument(instrument_name.upper())
+
+        # create a new plot with one subplot (data series) in it
+        linked_plot.add_plot(plot_title=instrument_name.upper())
+        linked_plot.add_subplot(instrument.data, y_axis_name=column_name)
+
+    # show the GUI window
+    linked_plot.show()
 
 if __name__ == '__main__':
 
