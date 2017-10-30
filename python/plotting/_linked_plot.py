@@ -42,12 +42,6 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         self.parent_plot = None
         self.first_plot = None
 
-        # # create initial plots
-        # for numpy_array, data_column_name, plot_title in inputs:
-        #     self.add_plot(numpy_array, data_column_name, plot_title)
-
-        #     self.show()
-
     def add_plot(self, plot_title):
 
         plot = self.addPlot(row=self.plot_row_counter, col=0)
@@ -166,11 +160,18 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
            IndexError: If the date isn't present in the data set
         """
         # get the plot
-        pl = self.plots[plot_title]
+        try:
+            pl = self.plots[plot_title]
+        except KeyError:
+            raise KeyError('Plot with title "' + plot_title + '" not found')
 
-        # convert date to timestamp
-        timestamp = datetime.datetime(
-            date.year, date.month, date.day).timestamp()
+        # try to convert date/datetime to timestamp
+        try:
+            timestamp = datetime.datetime(
+                date.year, date.month, date.day).timestamp()
+        except:
+            # try to use the the value as is
+            timestamp = date
 
         ld = pl.listDataItems()[0]
 
@@ -386,28 +387,12 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         super().mouseReleaseEvent(event)
         self.mouse_released_signal.emit()
 
-
-def linked_plot(inputs, window_title=''):
-    """Create a windows of linked plots using LinkedPlotWidget
-
-        args:
-           inputs: list of tuples: (numpy_array, data_column_name, plot_title).
-                   It is assumed that numpy_array['date'] exists.
-           window_title(str): Title of the window
-    """
-    setproctitle("oslo-quant-linkedplot")
-    app = QtWidgets.QApplication(sys.argv)
-    lw = LinkedPlotWidget(inputs, window_title)
-
-    # install signal handler
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    sys.exit(app.exec_())
-
-
 class LinkedPlot():
     """
-    Linked plot GUI application
+    Create a windows of linked plots using LinkedPlotWidget
+
+    args:
+        window_title(str): Title of the window
     """
 
     def __init__(self, window_title=""):
@@ -423,9 +408,15 @@ class LinkedPlot():
         self.linked_plot_widget.add_subplot(numpy_array, y_axis_name)
 
     def show(self):
+
         # install signal handler
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
         self.linked_plot_widget.show()
-
         sys.exit(self.app.exec_())
+
+    def add_marker(self, plot_title, date, angle=-90, text="", color='blue'):
+        self.linked_plot_widget.add_marker(plot_title, date, angle, text, color)
+
+    
+
