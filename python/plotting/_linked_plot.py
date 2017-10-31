@@ -39,7 +39,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         self.plot_row_counter = 1
         self.first_plot = None
         self.plots = {}
-        self.parent_plot = None
+        self.latest_plot = None
         self.first_plot = None
 
     def add_plot(self, plot_title):
@@ -47,7 +47,6 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         plot = self.addPlot(row=self.plot_row_counter, col=0)
 
         self.plot_row_counter += 1
-        plot.name = plot_title
 
         # some predefined colors that aren't too ugly
         plot.nice_colors = [(255, 255, 255),
@@ -87,14 +86,22 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         # hide meaningless x-axis ticks
         plot.getAxis('bottom').setTicks([])
 
-        self.plots[plot_title] = plot
-        self.parent_plot = plot
+        plot.name = plot_title
+
+        # each plot must have a unique identifier
+        if plot.name in self.plots:
+            unique_name = id(plot)
+        else:
+            unique_name = plot.name
+
+        self.plots[unique_name] = plot
+        self.latest_plot = plot
         if self.first_plot is None:
             self.first_plot = plot
 
     def add_subplot(self, numpy_array, y_axis_name):
 
-        if self.parent_plot is None:
+        if self.latest_plot is None:
             raise KeyError("add_plot() hasn't been called yet")
 
         # if the numpy 'data' column is a Python object, assume it's datatime.date
@@ -117,30 +124,45 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             date_array = numpy_array
 
         try:
-            color = self.parent_plot.nice_colors.pop(0)
+            color = self.latest_plot.nice_colors.pop(0)
         except IndexError:
             raise IndexError(
                 "All predefined colors have been used for this plot")
 
         # create the subplot
-        plot = self.parent_plot.plot(row=self.plot_row_counter,
-                                     col=0,
-                                     pen=color,
-                                     y=numpy_array[y_axis_name],
-                                     x=date_array['date'])
+        subplot = self.latest_plot.plot(row=self.plot_row_counter,
+                                        col=0,
+                                        pen=color,
+                                        y=numpy_array[y_axis_name],
+                                        x=date_array['date'])
+        subplot.parent_plot = self.latest_plot
 
-        # the subplot name will appear in the legend
-        plot.name = self.parent_plot.name + "_" + y_axis_name
+        unique_name = subplot.parent_plot.name + "_" + y_axis_name
+
+        # the subplot display name will appear in the legend
+        if(self.latest_plot.name == ''):
+            subplot.display_name = y_axis_name
+        else:
+            subplot.display_name = unique_name
+
+        # check that there doesn't exist a subplot with this name
+        for subplot in subplot.parent_plot.dataItems:
+            if subplot.name == unique_name:
+                raise ValueError('subplot name "' +
+                                 unique_name + "' already exists")
+
+        # set the subplot name
+        subplot.name = unique_name
 
         # connect the mouse moved listener
-        plot.scene().sigMouseMoved.connect(self.mouse_moved)
+        subplot.scene().sigMouseMoved.connect(self.mouse_moved)
 
         # link the y-axes of the time series in this plot
-        box = plot.getViewBox()
-        box.setYLink(self.parent_plot)
+        box = subplot.getViewBox()
+        box.setYLink(subplot.parent_plot)
 
         # link the x-axes of all plots
-        box = plot.getViewBox()
+        box = subplot.getViewBox()
         box.setXLink(self.first_plot)
 
     def show(self):
@@ -171,10 +193,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
            KeyError: If the plot or subplot isn't found
         """
         # get the plot
-        try:
-            pl = self.plots[plot_title]
-        except KeyError:
-            raise KeyError('Plot with title "' + plot_title + '" not found')
+        pl = self.get_plot(plot_title)
 
         # try to convert date/datetime to timestamp
         try:
@@ -184,17 +203,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             # try to use the the value as is
             timestamp = date
 
-        # name of the subplot to look for
-        name = plot_title + "_" + y_axis_name
-
-        # find the subplot
-        for ld in pl.listDataItems():
-            if ld.name == name:
-                break
-
-        # if we didn't break out of the loop
-        else:
-            raise KeyError('Could not find a subplot named "' + name + "'")
+        ld = self.get_subplot(plot_title, y_axis_name)
 
         # get the index containing the nearest timestamp value for this x position
         x_data = ld.getData()[0]
@@ -339,8 +348,8 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                 text = ""
 
                 # get the numpy arrays containing the x and y data for all subplots
-                for ld in pl.listDataItems():
-                    data = ld.getData()
+                for subplot in pl.listDataItems():
+                    data = subplot.getData()
                     x_data = data[0]
                     y_data = data[1]
 
@@ -366,12 +375,11 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                         # get the y value
                         y = y_data[x_index]
 
-                        #color = pl.palette().color(QtGui.QPalette.Background).name()
-                        color = ld.opts['pen']
+                        color = subplot.opts['pen']
 
                         # set the y value at the vertical line on this plot at the x position
                         text += "<span style='color: rgb%s'>%s=%s</span><br>" % (
-                            color, ld.name, str(round(y, 4)))
+                            color, subplot.display_name, str(round(y, 4)))
 
                 pl.value_text.setHtml(text)
 
@@ -399,6 +407,27 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         self.mouse_released_signal.emit()
+
+    def get_plot(self, plot_title):
+        try:
+            return self.plots[plot_title]
+        except KeyError:
+            raise KeyError('Plot with title "' + plot_title + '" not found')
+
+    def get_subplot(self, plot_title, y_axis_name):
+
+        # name of the subplot to look for
+        name = plot_title + "_" + y_axis_name
+
+        # find the parent plot
+        pl = self.get_plot(plot_title)
+
+        # find the subplot
+        for subplot in pl.listDataItems():
+            if subplot.name == name:
+                return subplot
+
+        raise KeyError('Could not find a subplot named "' + name + "'")
 
 
 class LinkedPlot():

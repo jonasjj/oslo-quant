@@ -9,7 +9,8 @@ from tabulate import tabulate
 from markets import get_instrument
 from historical_return_from_to_date import parse_date
 from historical_return_from_to_date import historical_return_from_to_date
-from plotting import linked_plot
+from plotting import LinkedPlot
+
 
 def historical_return_sell_date(instrument, sell_date):
     """
@@ -28,7 +29,7 @@ def historical_return_sell_date(instrument, sell_date):
 
             {'days':
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..],
-             'avg_gain_ratio': 
+             'avg_gain_ratio':
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..],
              'pos_gain':
                 [(buy_date, sell_date, avg_gain_ratio, pos_gain_ratio),..]}
@@ -37,10 +38,10 @@ def historical_return_sell_date(instrument, sell_date):
     """
     # start with a buy date which is sell_date minus 1 year + 1 day
     buy_date = datetime.date(sell_date.year - 1, sell_date.month, sell_date.day) + \
-               datetime.timedelta(days=1)
+        datetime.timedelta(days=1)
 
     results = []
-        
+
     # for all the days in the year leading up to sell_date
     while buy_date <= sell_date:
 
@@ -52,7 +53,7 @@ def historical_return_sell_date(instrument, sell_date):
                         d['pos_gain_ratio'],
                         d['variance'],
                         d['std_deviation']))
-        
+
         # increment by one day
         buy_date += datetime.timedelta(days=1)
 
@@ -67,8 +68,9 @@ def historical_return_sell_date(instrument, sell_date):
          'year_count': year_count,
          'avg_gain_ratio': avg_gain_list,
          'pos_gain_ratio': pos_gain_list}
-    
+
     return d
+
 
 def print_tablist(results):
     """Print a tabulated list"""
@@ -91,11 +93,13 @@ def print_tablist(results):
                                       "Pos.gain",
                                       "Variance",
                                       "Std.dev")))
-    
+
+
 if __name__ == "__main__":
-    
+
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Plot historical return when selling at a particular date")
+    parser = argparse.ArgumentParser(
+        description="Plot historical return when selling at a particular date")
     parser.add_argument("ticker", help="Ticker name (ex.: OBX.OSE)")
     parser.add_argument("sell_date", help="Sell date: YYYY-MM-DD")
     parser.add_argument("--variance",
@@ -115,7 +119,7 @@ if __name__ == "__main__":
 
     # print a table with the results
     print_tablist(res['days'])
-    
+
     # create empty numpy matrix with room for all values
     matrix = np.zeros(shape=len(res['days']),
                       dtype=[('date', 'f8'),
@@ -125,43 +129,32 @@ if __name__ == "__main__":
                              ('std_deviation', 'f8')])
 
     # construct numpy matrix
-    for i,day in enumerate(res['days']):
+    for i, day in enumerate(res['days']):
         date, _, avg_gain, pos_gain, variance, std_deviation = day
-        
+
         # convert to Unix timestamp
         dt = datetime.datetime(date.year, date.month, date.day)
         timestamp = dt.timestamp()
-        
+
         matrix[i] = timestamp, avg_gain, pos_gain, variance, std_deviation
 
-    # create input data for the linked plots
-    plot_inputs = []
+    # create the linked plots
+    plot_title = "historical_return_sell_date.py, " + \
+        instrument.ticker + ", years averaged: " + \
+        str(res['year_count']) + ", sell date: " + str(sell_date)
 
-    plot_inputs.append((matrix,
-                        'avg_gain',
-                        "Average gain ratio for " + instrument.ticker + \
-                        ", years averaged: " + str(res['year_count']) + \
-                        ", sell date: " + str(sell_date)))
-
-    plot_inputs.append((matrix,
-                        'pos_gain',
-                        "Positive gain ratio for " + instrument.ticker + \
-                        ", years averaged: " + str(res['year_count']) + \
-                        ", sell date: " + str(sell_date)))
+    linked_plot = LinkedPlot(plot_title)
+    linked_plot.add_plot()
+    linked_plot.add_subplot(matrix, "avg_gain")
+    linked_plot.add_plot()
+    linked_plot.add_subplot(matrix, "pos_gain")
 
     if args.variance:
-        plot_inputs.append((matrix,
-                            'variance',
-                            "Variance for " + instrument.ticker + \
-                            ", years averaged: " + str(res['year_count']) + \
-                            ", sell date: " + str(sell_date)))
+        linked_plot.add_plot()
+        linked_plot.add_subplot(matrix, "variance")
 
     if args.std_deviation:
-        plot_inputs.append((matrix,
-                            'std_deviation',
-                            "Standard deviation for " + instrument.ticker + \
-                            ", years averaged: " + str(res['year_count']) + \
-                            ", sell date: " + str(sell_date)))
-                       
-    # create the plot
-    linked_plot(plot_inputs)
+        linked_plot.add_plot()
+        linked_plot.add_subplot(matrix, "std_deviation")
+
+    linked_plot.show()
