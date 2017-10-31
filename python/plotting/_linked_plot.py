@@ -8,7 +8,12 @@ import signal
 
 
 class LinkedPlotWidget(pg.GraphicsLayoutWidget):
-    """Widget for stacking several plots with linked x-axes vertically"""
+    """
+    Widget for stacking several plots with linked x-axes vertically.
+    Plots may have one or more subplots shareing the same x- and y-axes.
+    This is a widget which can be embedded in another Qt application,
+    use the LinkedPlot class for creating standalone plots.
+    """
 
     mouse_pressed_signal = QtCore.pyqtSignal()
     mouse_released_signal = QtCore.pyqtSignal()
@@ -432,25 +437,71 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
 class LinkedPlot():
     """
-    Create a windows of linked plots using LinkedPlotWidget
+    GUI application for displaying stacked plots with linked x-axes.
+    Plots may have one or more subplots shareing the same x- and y-axes.
+
+    Example usage:
+
+        import numpy as np
+        import math
+        
+        import sys
+        sys.path.append('..')
+        
+        from plotting import LinkedPlot
+        
+        x_axis = tuple(float(x / 10) for x in range(100))
+        y1_axis = tuple(math.sin(x) for x in x_axis)
+        y2_axis = tuple(math.cos(x) for x in x_axis)
+        
+        matrix = np.array(list(zip(x_axis, y1_axis, y2_axis)),
+                          dtype=[('date', 'f8'),
+                                 ('y1', 'f8'),
+                                 ('y2', 'f8')])
+        
+        linked_plot = LinkedPlot(window_title="LOL Window")
+        linked_plot.add_plot(plot_title="LOL Plot1")
+        linked_plot.add_subplot(matrix, y_axis_name='y1')
+        linked_plot.add_subplot(matrix, y_axis_name='y2')
+        linked_plot.add_plot(plot_title="LOL Plot2")
+        linked_plot.add_subplot(matrix, y_axis_name='y1')
+        linked_plot.add_marker("LOL Plot1", "y2", x_axis[10], text="LOL")
+        linked_plot.show()
 
     args:
-        window_title(str): Title of the window
+        window_title(str): Title of the main window
     """
-
     def __init__(self, window_title=""):
         setproctitle("oslo-quant-linkedplot")
         self.app = QtWidgets.QApplication(sys.argv)
-
         self.linked_plot_widget = LinkedPlotWidget(window_title)
 
     def add_plot(self, plot_title=""):
+        """Add a new plot to the main window, top down ordering
+        
+        args:
+            plot_title: Title to show in legend. A plot title is
+                        required if add_marker() is to be used.
+        """
         self.linked_plot_widget.add_plot(plot_title)
 
     def add_subplot(self, numpy_array, y_axis_name):
+        """
+        Add a new time series to the last created plot.
+        add_plot() must have been called once before this.
+
+        args:
+            numpy_array: Numpy array with named columns.
+                         One of the columns must be named dtype: 'date'.
+                         The 'date' column can be float or datetime object.
+                         If float, it will be decoded as unix epoch timestamps.
+            y_axis_name: Name of the column in numpy_array which contains
+                         the y-axis values.
+        """
         self.linked_plot_widget.add_subplot(numpy_array, y_axis_name)
 
     def show(self):
+        """Show the GUI window"""
 
         # install signal handler
         signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -460,5 +511,18 @@ class LinkedPlot():
 
     def add_marker(self, plot_title, y_axis_name, date,
                    angle=-90, text="", color='blue'):
+        """
+        Add a marker to a specific point on the subplot curve.
+        add_plot() must have been called using a unique name
+        to use this function.
+
+        args:
+            plot_title: Title of the plot containing the subplot
+            y_axis_name: Y-axis column name as given in add_subplot() call
+            date: X-axis date to attach the marker to
+            angle: Angle of the arrow from the text box to the curve
+            text: Text to display in the text box
+            color: "blue", "green", or "red" (currently) 
+        """
         self.linked_plot_widget.add_marker(
             plot_title, y_axis_name, date, angle, text, color)
