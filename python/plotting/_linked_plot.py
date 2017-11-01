@@ -6,7 +6,6 @@ import datetime
 import numpy as np
 import signal
 
-
 class LinkedPlotWidget(pg.GraphicsLayoutWidget):
     """
     Widget for stacking several plots with linked x-axes vertically.
@@ -18,13 +17,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
     mouse_pressed_signal = QtCore.pyqtSignal()
     mouse_released_signal = QtCore.pyqtSignal()
 
-    def __init__(self, inputs, window_title=''):
-        """
-        args:
-           inputs: list of tuples: (numpy_array, data_column_name, plot_title).
-                   It is assumed that numpy_array['date'] exists.
-           window_title(str): Title of the window
-        """
+    def __init__(self, window_title):
         super().__init__()
 
         self.setWindowTitle(window_title)
@@ -47,10 +40,21 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         self.latest_plot = None
         self.first_plot = None
 
-    def add_plot(self, plot_title):
+    def add_plot(self, plot_title, title_above, title_in_legend):
 
-        plot = self.addPlot(row=self.plot_row_counter, col=0)
+        # don't show blank titles
+        if plot_title.strip() == '':
+            title_above = False
+            title_in_legend = False
 
+        if title_above:
+            t = plot_title
+        else:
+            t = ""
+            
+        plot = self.addPlot(row=self.plot_row_counter, col=0, title=t)
+
+        plot.title_in_legend = title_in_legend
         self.plot_row_counter += 1
 
         # some predefined colors that aren't too ugly
@@ -83,7 +87,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         plot.h_line = h_line
 
         # the text responsible for showing the y value where the vertical line is
-        value_text = pg.TextItem(anchor=(0.5, 0))
+        value_text = pg.TextItem(anchor=(0.4, 0))
         value_text.setPos(92, 0)
         value_text.setParentItem(plot)
         plot.value_text = value_text
@@ -91,28 +95,44 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         # hide meaningless x-axis ticks
         plot.getAxis('bottom').setTicks([])
 
-        plot.name = plot_title
+        plot.display_name = plot_title
 
         # each plot must have a unique identifier
-        if plot.name in self.plots:
-            unique_name = id(plot)
+        if plot.display_name in self.plots:
+            plot.unique_name = id(plot)
         else:
-            unique_name = plot.name
+            plot.unique_name = plot.display_name
 
-        self.plots[unique_name] = plot
+        self.plots[plot.unique_name] = plot
         self.latest_plot = plot
         if self.first_plot is None:
             self.first_plot = plot
 
-    def add_subplot(self, numpy_array, y_axis_name):
+    def add_subplot(self, numpy_array, y_axis_name, display_name):
 
         if self.latest_plot is None:
             raise KeyError("add_plot() hasn't been called yet")
 
+        # unique id to identify this subplot with
+        unique_id = (self.latest_plot.unique_name, y_axis_name, display_name)
+
+        # use the y-axis name if not display name was given
+        if display_name is None:
+            display_name = y_axis_name
+
+        
+        if self.latest_plot.title_in_legend:
+            display_name = self.latest_plot.display_name + "_" + display_name
+
+        # check that there doesn't exist a subplot with this name
+        for subplot in self.latest_plot.dataItems:
+            if subplot.unique_id == unique_id:
+                raise ValueError("subplot " + str(unique_id) + " already exists")
+        
         # if the numpy 'data' column is a Python object, assume it's datatime.date
         if numpy_array['date'].dtype == np.dtype('O'):
 
-            # construct a new array with only room for the date column converted to timestamp
+            # construct a new array for the date column converted to timestamp
             date_array = np.empty(shape=(len(numpy_array['date'])),
                                   dtype=[('date', 'f8')])
 
@@ -131,8 +151,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         try:
             color = self.latest_plot.nice_colors.pop(0)
         except IndexError:
-            raise IndexError(
-                "All predefined colors have been used for this plot")
+            raise IndexError("All predefined colors have been used for this plot")
 
         # create the subplot
         subplot = self.latest_plot.plot(row=self.plot_row_counter,
@@ -140,24 +159,10 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                                         pen=color,
                                         y=numpy_array[y_axis_name],
                                         x=date_array['date'])
+
         subplot.parent_plot = self.latest_plot
-
-        unique_name = subplot.parent_plot.name + "_" + y_axis_name
-
-        # the subplot display name will appear in the legend
-        if(self.latest_plot.name == ''):
-            subplot.display_name = y_axis_name
-        else:
-            subplot.display_name = unique_name
-
-        # check that there doesn't exist a subplot with this name
-        for subplot in subplot.parent_plot.dataItems:
-            if subplot.name == unique_name:
-                raise ValueError('subplot name "' +
-                                 unique_name + "' already exists")
-
-        # set the subplot name
-        subplot.name = unique_name
+        subplot.unique_id = unique_id
+        subplot.display_name = display_name
 
         # connect the mouse moved listener
         subplot.scene().sigMouseMoved.connect(self.mouse_moved)
@@ -182,21 +187,8 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             self.remove_plot(pl_title)
         self.first_plot = None
 
-    def add_marker(self, plot_title, y_axis_name, date, angle=-90, text="", color='blue'):
-        """
-        Add a marker to a plot
+    def add_marker(self, date, plot_title, y_axis_name, display_name, angle, text, color):
 
-        Args:
-           plot_title (str): The name of the plot
-           y_axis_name(str): The name of the subplot to attach the marker to
-           date (datetime.date): x-axis date to add a marker to
-           angle (int): Angle of the arrow marker. -90 is top down.
-           color (str): 'blue', 'green', or 'red'
-
-        Raises:
-           IndexError: If the date isn't present in the data set
-           KeyError: If the plot or subplot isn't found
-        """
         # get the plot
         pl = self.get_plot(plot_title)
 
@@ -208,7 +200,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
             # try to use the the value as is
             timestamp = date
 
-        ld = self.get_subplot(plot_title, y_axis_name)
+        ld = self.get_subplot(plot_title, y_axis_name, display_name)
 
         # get the index containing the nearest timestamp value for this x position
         x_data = ld.getData()[0]
@@ -252,8 +244,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                     '<span style="color: #FF0; font-size: 14pt;">%s</span>' % line)
 
             # create html text box
-            html = '<div style="text-align: center">%s</div>' % "<br>".join(
-                spans)
+            html = '<div style="text-align: center">%s</div>' % "<br>".join(spans)
 
             # Adjust the y anchor point to the number of lines in the text box.
             # I don't know how to so this properly.
@@ -419,20 +410,20 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
         except KeyError:
             raise KeyError('Plot with title "' + plot_title + '" not found')
 
-    def get_subplot(self, plot_title, y_axis_name):
-
-        # name of the subplot to look for
-        name = plot_title + "_" + y_axis_name
+    def get_subplot(self, plot_title, y_axis_name, display_name):
 
         # find the parent plot
         pl = self.get_plot(plot_title)
 
+        # name of the subplot to look for
+        unique_subplot_id = (pl.unique_name, y_axis_name, display_name)
+
         # find the subplot
         for subplot in pl.listDataItems():
-            if subplot.name == name:
+            if subplot.unique_id == unique_subplot_id:
                 return subplot
 
-        raise KeyError('Could not find a subplot named "' + name + "'")
+        raise KeyError('Could not find subplot' + str(unique_subplot_id))
 
 
 class LinkedPlot():
@@ -444,21 +435,21 @@ class LinkedPlot():
 
         import numpy as np
         import math
-        
+
         import sys
         sys.path.append('..')
-        
+
         from plotting import LinkedPlot
-        
+
         x_axis = tuple(float(x / 10) for x in range(100))
         y1_axis = tuple(math.sin(x) for x in x_axis)
         y2_axis = tuple(math.cos(x) for x in x_axis)
-        
+
         matrix = np.array(list(zip(x_axis, y1_axis, y2_axis)),
                           dtype=[('date', 'f8'),
                                  ('y1', 'f8'),
                                  ('y2', 'f8')])
-        
+
         linked_plot = LinkedPlot(window_title="LOL Window")
         linked_plot.add_plot(plot_title="LOL Plot1")
         linked_plot.add_subplot(matrix, y_axis_name='y1')
@@ -467,25 +458,30 @@ class LinkedPlot():
         linked_plot.add_subplot(matrix, y_axis_name='y1')
         linked_plot.add_marker("LOL Plot1", "y2", x_axis[10], text="LOL")
         linked_plot.show()
-
-    args:
-        window_title(str): Title of the main window
     """
+
     def __init__(self, window_title=""):
+        """
+        args:
+            window_title(str): Title of the main window
+        """
         setproctitle("oslo-quant-linkedplot")
         self.app = QtWidgets.QApplication(sys.argv)
         self.linked_plot_widget = LinkedPlotWidget(window_title)
 
-    def add_plot(self, plot_title=""):
+    def add_plot(self, plot_title="", title_above=True, title_in_legend=False):
         """Add a new plot to the main window, top down ordering
-        
+
         args:
             plot_title: Title to show in legend. A plot title is
                         required if add_marker() is to be used.
+            title_above: Show plot_title above the plot
+            title_in_legend: Show title in legend joined by a '_'.
+                             Ex: 'MyTitle_MyYaxisName'
         """
-        self.linked_plot_widget.add_plot(plot_title)
+        self.linked_plot_widget.add_plot(plot_title, title_above, title_in_legend)
 
-    def add_subplot(self, numpy_array, y_axis_name):
+    def add_subplot(self, numpy_array, y_axis_name, display_name=None):
         """
         Add a new time series to the last created plot.
         add_plot() must have been called once before this.
@@ -497,8 +493,9 @@ class LinkedPlot():
                          If float, it will be decoded as unix epoch timestamps.
             y_axis_name: Name of the column in numpy_array which contains
                          the y-axis values.
+            display_name: Show this name in the legend instead of y_axis_name
         """
-        self.linked_plot_widget.add_subplot(numpy_array, y_axis_name)
+        self.linked_plot_widget.add_subplot(numpy_array, y_axis_name, display_name)
 
     def show(self):
         """Show the GUI window"""
@@ -509,20 +506,27 @@ class LinkedPlot():
         self.linked_plot_widget.show()
         sys.exit(self.app.exec_())
 
-    def add_marker(self, plot_title, y_axis_name, date,
+    def add_marker(self, date, plot_title, y_axis_name, display_name=None,
                    angle=-90, text="", color='blue'):
         """
         Add a marker to a specific point on the subplot curve.
         add_plot() must have been called using a unique name
         to use this function.
+        Use the same parameters that were used in add_plot()
+        and add_subplot() to identify the correct subplot.
 
         args:
+            date: X-axis date to attach the marker to
             plot_title: Title of the plot containing the subplot
             y_axis_name: Y-axis column name as given in add_subplot() call
-            date: X-axis date to attach the marker to
+            display_name: Display name of the subplot to get
             angle: Angle of the arrow from the text box to the curve
             text: Text to display in the text box
-            color: "blue", "green", or "red" (currently) 
+            color: "blue", "green", or "red" (currently)
+
+        Raises:
+           IndexError: If the date isn't present in the data set
+           KeyError: If the plot or subplot isn't found
         """
         self.linked_plot_widget.add_marker(
-            plot_title, y_axis_name, date, angle, text, color)
+            date, plot_title, y_axis_name, display_name, angle, text, color)
