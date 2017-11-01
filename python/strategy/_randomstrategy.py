@@ -13,6 +13,8 @@ class RandomStrategy(Strategy):
     def execute(self, today):
         super().execute(today)
 
+        random.seed(2)
+
         # select a random ticker
         tickers = self.get_tickers()
         ticker = random.choice(tickers)

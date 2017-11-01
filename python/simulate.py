@@ -11,7 +11,7 @@ from markets import trading_days
 from markets import get_instrument
 from strategy import Share
 from strategy import broker
-from plotting import linked_plot
+from plotting import LinkedPlot
 
 def simulate(strategy, money, from_date, to_date):
 
@@ -73,11 +73,11 @@ def simulate(strategy, money, from_date, to_date):
                 
                 money -= order.total
             
-            interest = broker.calculate_interest(money)
-            money += interest
+        interest = broker.calculate_interest(money)
+        money += interest
 
         # calculate the current market value
-        portfolio_value = money
+        portfolio_value = 0
         for share in portfolio.values():
             share_value = share.get_value(today)
             portfolio_value += share_value
@@ -109,27 +109,30 @@ def simulate(strategy, money, from_date, to_date):
                                            ('portfolio_value', 'f8'),
                                            ('loan_ratio', 'f8')])
     
-    # create input data for the linked plots
-    plot_inputs = []
+    # create a plot showing the behavior of the strategy
+    plot = LinkedPlot(window_title=str(strategy))
+    plot.add_plot("Account value", title_above=False)
+    plot.add_subplot(matrix, "account_value", "val")
+    plot.show()
 
-    # add account value to the plot
-    plot_inputs.append((matrix,
-                        'account_value',
-                        "Account value"))
-
-    # add liquid funds to the plot to the plot
-    plot_inputs.append((matrix,
-                        'money',
-                        "Liquid funds (money)"))
-
-    # add liquid funds to the plot to the plot
-    plot_inputs.append((matrix,
-                        'portfolio_value',
-                        "Portfolio value (equity)"))
-    
-
-    # create the plot
-    linked_plot(plot_inputs, window_title=str(strategy))
+#    # add account value to the plot
+#    plot_inputs.append((matrix,
+#                        'account_value',
+#                        "Account value"))
+#
+#    # add liquid funds to the plot to the plot
+#    plot_inputs.append((matrix,
+#                        'money',
+#                        "Liquid funds (money)"))
+#
+#    # add liquid funds to the plot to the plot
+#    plot_inputs.append((matrix,
+#                        'portfolio_value',
+#                        "Portfolio value (equity)"))
+#    
+#
+#    # create the plot
+#    linked_plot(plot_inputs, window_title=str(strategy))
             
 if __name__ == "__main__":
 
