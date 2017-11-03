@@ -161,14 +161,12 @@ class Strategy(object, metaclass=ABCMeta):
         """
         # get a copy of the Instrument object which we can modify
         instrument = deepcopy(markets.get_instrument(ticker))
-
+        
         # Check that this ticker existed at today's date
-        first_date = instrument.get_first_date()
-        last_date = instrument.get_last_date()
-        if self.today < first_date or self.today > last_date:
+        if not instrument.existed_at_date(self.today):
             raise ValueError("'" + ticker + "' didn't exist at " + str(self.today) + \
-                             ", first date: " + str(first_date) + \
-                             ", last date: " + str(last_date))
+                             ", first date: " + str(instrument.get_first_date()) + \
+                             ", last date: " + str(instrument.get_last_date()))
 
         # We already know that this date exists for this ticker.
         # If there is no date, it means there were no trades this date,
