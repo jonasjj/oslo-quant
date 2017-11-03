@@ -59,10 +59,14 @@ def get_nasdaqomx():
         _nasdaqomx = pickle.load(f)
         return _nasdaqomx
 
-def get_instruments():
+def get_instruments(oslobors=True, nasdaqomx=True):
     """
     Get a pickled dict of all instruments in all markets.
     If a market's pickle file isn't found, it will be omitted.
+
+    Args:
+        oslobors(bool): Include stocks listed on Oslo Børs
+        nasdaqomx(bool): Include stocks listed on Nasdaq OMX
 
     Return:
        A dict of instruments indexed by name"""
@@ -76,16 +80,13 @@ def get_instruments():
     list_of_markets = []
 
     # load all instruments if the pickle files exist
-    try:
-        oslobors = get_oslobors()
-        list_of_markets.append(oslobors)
-    except FileNotFoundError:
-        pass
-    try:
-        nasdaqomx = get_nasdaqomx()
-        list_of_markets.append(nasdaqomx)
-    except FileNotFoundError:
-        pass
+    if oslobors:
+        oslobors_stocks = get_oslobors()
+        list_of_markets.append(oslobors_stocks)
+    
+    if nasdaqomx:
+        nasdaqomx_stocks = get_nasdaqomx()
+        list_of_markets.append(nasdaqomx_stocks)
 
     # create a new dict containing all instruments for all markets
     _instruments = {}
@@ -116,7 +117,7 @@ def get_instrument(ticker):
     instruments = get_instruments()
     return instruments[ticker]
 
-def get_tickers():
+def get_tickers(oslobors=True, nasdaqomx=True):
     """
     Get a list of all the tickers in all markets sorted alphabetically
     

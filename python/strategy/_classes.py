@@ -115,6 +115,7 @@ class Strategy(object, metaclass=ABCMeta):
         """
         self.money = money
         self.portfolio = portfolio
+        self.today = from_date
         self.from_date = from_date
         self.to_date = to_date
 
@@ -179,24 +180,28 @@ class Strategy(object, metaclass=ABCMeta):
 
         return instrument
 
-    def get_tickers(self):
+    def get_instruments(self, oslobors=True, nasdaqomx=True):
         """
-        Get a list of tickers that exist at today's date
+        Get a list of instruments that exist at today's date
+
+        Args:
+            oslobors(bool): Include stocks listed on Oslo Børs
+            nasdaqomx(bool): Include stocks listed on Nasdaq OMX
 
         Return:
            Alphabetically sorted list of tickers
         """
         # All tickers that ever existed
-        all_tickers = markets.get_tickers()
+        all_instruments = markets.get_tickers(oslobors, nasdaqomx)
         
-        todays_tickers = []
-        for t in all_tickers:
+        todays_instruments = []
+        for t in all_instruments:
 
-            # If a ValueError is raised, it mean this ticker doesn't exist today
+            # If a ValueError is raised, it mean it exist today
             try:
                 self.get_instrument(t)
-                todays_tickers.append(t)
+                todays_instruments.append(t)
             except ValueError:
                 pass
 
-        return todays_tickers
+        return todays_instruments

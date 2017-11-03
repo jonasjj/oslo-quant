@@ -16,6 +16,9 @@ class MomentumStrategy(Strategy):
     def __init__(self, money, portfolio, from_date, to_date):
         super().__init__(money, portfolio, from_date, to_date)
 
+        # let's focus on stocks noted on Oslo Børs
+        instruments = self.get_instruments(oslobors=True, nasdaqomx=False)
+
     def execute(self, today):
         super().execute(today)
 

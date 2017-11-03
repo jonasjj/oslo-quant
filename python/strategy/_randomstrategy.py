@@ -16,7 +16,7 @@ class RandomStrategy(Strategy):
         random.seed(2)
 
         # select a random ticker
-        tickers = self.get_tickers()
+        tickers = self.get_instruments()
         ticker = random.choice(tickers)
 
         instrument = self.get_instrument(ticker)
