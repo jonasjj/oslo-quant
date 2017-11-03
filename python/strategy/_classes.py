@@ -197,8 +197,8 @@ class Strategy(object, metaclass=ABCMeta):
 
             # If a ValueError is raised, it mean it exist today
             try:
-                self.get_instrument(t)
-                todays_instruments.append(t)
+                i = self.get_instrument(t)
+                todays_instruments.append(i)
             except ValueError:
                 pass
 
