@@ -199,3 +199,31 @@ class Strategy(object, metaclass=ABCMeta):
                 pass
 
         return todays_instruments
+
+    def trading_days(self, from_date, to_date):
+        """
+        Find the closed interval of trading days between two dates
+
+        Args:
+        from_date(datetime.date):
+        to_date(datetime.date):
+
+        Yields:
+        datetime.date objects
+        """
+        yield markets.trading_days(from_date, to_date)
+
+    def trading_days_ago(self, days):
+        """
+        Find the date N trading days in the past from today
+
+        Args:
+            days(int): Number of days to count backwards
+
+        Return:
+            datetime.date
+
+        Raises:
+            KeyError: If there is no data for either of the dates
+        """
+        return markets.trading_days_ago(self.today, days)

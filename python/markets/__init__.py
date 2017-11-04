@@ -171,3 +171,23 @@ def trading_days(from_date, to_date, ticker='OBX.OSE'):
         if is_trading_day(date, ticker):
             yield date
         date += datetime.timedelta(days=1)
+
+def trading_days_ago(date, days, ticker='OBX.OSE'):
+    """
+    Find the date N trading days in the past
+
+    Args:
+        date(datetime.date): Date to count backwards from
+        days(int): Number of days to count backwards
+        ticker(str): Name of ticker to check for
+
+    Return:
+        datetime.date
+
+    Raises:
+        KeyError: If there is no data for either of the dates
+    """
+    instrument = get_instrument(ticker)
+    start_index = instrument.get_day_index_or_last_before(date)
+    row = instrument.data[start_index - days]
+    return datetime.date.fromtimestamp(row['date'])

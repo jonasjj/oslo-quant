@@ -19,21 +19,36 @@ class MomentumStrategy(Strategy):
     def __init__(self, money, portfolio, from_date, to_date):
         super().__init__(money, portfolio, from_date, to_date)
 
-        # how long into the past we should compare against
-        self.compare_delta = datetime.timedelta(days=30 * 3)
+        # how mange trading days into the past we should compare against
+        self.compare_days = 20 * 3
+
+        # how often to rebalance the portfolio
+        self.rebalancing_days = 20
 
         # the number of stocks to hold at any given time
         self.number_of_stocks = 3
 
+        # this means the portfolio will be due to rebalancing today
+        self.rebalance_date = self.trading_days_ago(self.rebalancing_days)
+
     def execute(self, today):
         super().execute(today)
 
-        # the date to compare against
-        compare_date = today - self.compare_delta
+        # if the portfolio is due to rebalancing
+        if self.rebalance_date <= self.trading_days_ago(self.rebalancing_days):
 
-        top_performers = self.get_top_performers(compare_date,
-                                                 self.number_of_stocks)
-        return []
+            # the date to compare against
+            compare_date = self.trading_days_ago(self.compare_days)
+
+            # get the top performers
+            top_performers = self.get_top_performers(compare_date,
+                                                     self.number_of_stocks)
+
+            self.rebalance_date = today
+            return []
+
+        else:
+            return []
 
     def get_top_performers(self, buy_date, count):
         """
@@ -51,7 +66,7 @@ class MomentumStrategy(Strategy):
         # get a list of all the stocks that exist today
         instruments = self.get_instruments()
 
-         # only include stocks listed on "Oslo Børs"
+        # only include stocks listed on "Oslo Børs"
         instruments = [x for x in instruments if x.exchange == 'Oslo Børs']
 
         # only include equity, not derivatives
