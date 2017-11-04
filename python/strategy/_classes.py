@@ -178,19 +178,15 @@ class Strategy(object, metaclass=ABCMeta):
 
         return instrument
 
-    def get_instruments(self, oslobors=True, nasdaqomx=True):
+    def get_instruments(self):
         """
         Get a list of instruments that exist at today's date
-
-        Args:
-            oslobors(bool): Include stocks listed on Oslo Børs
-            nasdaqomx(bool): Include stocks listed on Nasdaq OMX
 
         Return:
            Alphabetically sorted list of tickers
         """
         # All tickers that ever existed
-        all_instruments = markets.get_tickers(oslobors, nasdaqomx)
+        all_instruments = markets.get_tickers()
         
         todays_instruments = []
         for t in all_instruments:

@@ -59,14 +59,10 @@ def get_nasdaqomx():
         _nasdaqomx = pickle.load(f)
         return _nasdaqomx
 
-def get_instruments(oslobors=True, nasdaqomx=True):
+def get_instruments():
     """
     Get a pickled dict of all instruments in all markets.
     If a market's pickle file isn't found, it will be omitted.
-
-    Args:
-        oslobors(bool): Include stocks listed on Oslo Børs
-        nasdaqomx(bool): Include stocks listed on Nasdaq OMX
 
     Return:
        A dict of instruments indexed by name"""
@@ -80,13 +76,17 @@ def get_instruments(oslobors=True, nasdaqomx=True):
     list_of_markets = []
 
     # load all instruments if the pickle files exist
-    if oslobors:
+    try:
         oslobors_stocks = get_oslobors()
         list_of_markets.append(oslobors_stocks)
+    except FileNotFoundError:
+        pass
     
-    if nasdaqomx:
+    try:
         nasdaqomx_stocks = get_nasdaqomx()
         list_of_markets.append(nasdaqomx_stocks)
+    except FileNotFoundError:
+        pass
 
     # create a new dict containing all instruments for all markets
     _instruments = {}
@@ -101,14 +101,12 @@ def get_instruments(oslobors=True, nasdaqomx=True):
             
     return _instruments.copy()
 
-def get_instrument(ticker, oslobors=True, nasdaqomx=True):
+def get_instrument(ticker):
     """
     Get an instrument by ticker name.
     
     Args:
         ticker(str): Ticker name
-        oslobors(bool): Include stocks listed on Oslo Børs
-        nasdaqomx(bool): Include stocks listed on Nasdaq OMX
 
     Return:
         An instrument with a unique name from one of the markets.
@@ -116,17 +114,17 @@ def get_instrument(ticker, oslobors=True, nasdaqomx=True):
     Raises:
         KeyError: On item not found
     """
-    instruments = get_instruments(oslobors, nasdaqomx)
+    instruments = get_instruments()
     return instruments[ticker]
 
-def get_tickers(oslobors=True, nasdaqomx=True):
+def get_tickers():
     """
     Get a list of all the tickers in all markets sorted alphabetically
     
     Return:
        A list of str
     """
-    instruments = get_instruments(oslobors, nasdaqomx)
+    instruments = get_instruments()
     tickers = list(instruments)
     tickers.sort()
     return tickers
@@ -145,7 +143,7 @@ def is_trading_day(date, ticker='OBX.OSE'):
     Raises:
        KeyError: On item not found
     """
-    instrument = get_instrument(ticker, oslobors=True, nasdaqomx=False)
+    instrument = get_instrument(ticker)
     
     # If get_day_index() succeeds, this must be a trading day
     try:

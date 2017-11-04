@@ -48,8 +48,11 @@ class MomentumStrategy(Strategy):
         """
         sell_date = self.today
 
-        # only include stocks noted on Oslo Børs (that exist at from_date)
-        instruments = self.get_instruments(oslobors=True, nasdaqomx=False)
+        # get a list of all the stocks that exist today
+        instruments = self.get_instruments()
+
+         # only include stocks listed on "Oslo Børs"
+        instruments = [x for x in instruments if x.exchange == 'Oslo Børs']
 
         # only include equity, not derivatives
         instruments = [x for x in instruments if x.paper_type == 'Aksjer']
