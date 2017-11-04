@@ -101,20 +101,22 @@ def get_instruments(oslobors=True, nasdaqomx=True):
             
     return _instruments.copy()
 
-def get_instrument(ticker):
+def get_instrument(ticker, oslobors=True, nasdaqomx=True):
     """
     Get an instrument by ticker name.
     
     Args:
-       ticker(str): Ticker name
+        ticker(str): Ticker name
+        oslobors(bool): Include stocks listed on Oslo Børs
+        nasdaqomx(bool): Include stocks listed on Nasdaq OMX
 
     Return:
-       An instrument with a unique name from one of the markets.
+        An instrument with a unique name from one of the markets.
 
     Raises:
-       KeyError: On item not found
+        KeyError: On item not found
     """
-    instruments = get_instruments()
+    instruments = get_instruments(oslobors, nasdaqomx)
     return instruments[ticker]
 
 def get_tickers(oslobors=True, nasdaqomx=True):
@@ -124,7 +126,7 @@ def get_tickers(oslobors=True, nasdaqomx=True):
     Return:
        A list of str
     """
-    instruments = get_instruments()
+    instruments = get_instruments(oslobors, nasdaqomx)
     tickers = list(instruments)
     tickers.sort()
     return tickers
@@ -143,7 +145,7 @@ def is_trading_day(date, ticker='OBX.OSE'):
     Raises:
        KeyError: On item not found
     """
-    instrument = get_instrument(ticker)
+    instrument = get_instrument(ticker, oslobors=True, nasdaqomx=False)
     
     # If get_day_index() succeeds, this must be a trading day
     try:

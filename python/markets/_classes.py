@@ -7,17 +7,19 @@ File containing classes for markets and instruments
 
 
 class Instrument(object):
-    def __init__(self, ticker, long_name, paper_type, data):
+    def __init__(self, ticker, long_name, paper_type, exchange, data):
         """
         Args:
            ticker(str): Ticker name
            long_name(str): Full name
            paper_type(str): Stock, derivative, etc.
+           exchange(str): Oslo Børs, Oslo Access, Helsinki, etc.
            data:(numpy.array): Numpy matrix with named columns
         """
         self.ticker = ticker
         self.long_name = long_name
         self.paper_type = paper_type
+        self.exchange = exchange
         self.data = data
 
     def __str__(self):

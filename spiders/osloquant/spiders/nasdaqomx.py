@@ -62,9 +62,13 @@ class NasdaqOmxSpider(scrapy.Spider):
             # return a POST request for getting the index list in this category group
             yield FormRequest(url="https://indexes.nasdaqomx.com/Index/DirectoryData",
                               formdata={'categoryID': str(category['id'])},
+                              meta={'exchange': category['name']},
                               callback=self.parse_categories)
 
     def parse_categories(self, response):
+
+        # unpack meta values
+        exchange = response.meta['exchange']
 
         # get a dict with the json data
         data = json.loads(response.body_as_unicode())
@@ -88,7 +92,10 @@ class NasdaqOmxSpider(scrapy.Spider):
                                   'startDate': '1950-09-03T00:00:00.000',
                                   'endDate': '2050-09-03T00:00:00.000',
                                   'timeOfDay': 'EOD'},
-                              meta={'ticker': ticker, 'name': name, 'paper_type': paper_type},
+                              meta={'ticker': ticker,
+                                    'name': name,
+                                    'paper_type': paper_type,
+                                    'exchange': exchange},
                               callback=self.parse_historical_data)
 
     # parse the POST response containing the ticker data
@@ -98,6 +105,7 @@ class NasdaqOmxSpider(scrapy.Spider):
         ticker = response.meta['ticker']
         name = response.meta['name']
         paper_type = response.meta['paper_type']
+        exchange = response.meta['exchange']
 
         # get a dict with the json data
         data = json.loads(response.body_as_unicode())
@@ -146,4 +154,5 @@ class NasdaqOmxSpider(scrapy.Spider):
         return {'ticker': ticker,
                 'name': name,
                 'paper_type': paper_type,
+                'exchange': exchange,
                 'data': matrix}

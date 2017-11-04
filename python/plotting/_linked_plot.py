@@ -33,7 +33,7 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
 
         # install an event filter to detect that the mouse leaves the widget
         self.installEventFilter(self)
-
+        
         self.plot_row_counter = 1
         self.first_plot = None
         self.plots = {}

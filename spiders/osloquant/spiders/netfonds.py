@@ -83,12 +83,16 @@ class NetfondsSpider(scrapy.Spider):
             if header == "Papirtype" or header == "Paper type":
                 paper_type = tr.css('td::text').extract_first()
 
+            elif header == "Børs" or header == "Exchange":
+                exchange = tr.css('td::text').extract_first()
+
         # scrape the SDV file containing the historical data
         yield scrapy.Request(url=url,
                              callback=self.parse_sdv,
                              meta={'ticker': ticker,
                                    'name': name,
-                                   'paper_type': paper_type})
+                                   'paper_type': paper_type,
+                                   'exchange': exchange})
 
     def parse_sdv(self, response):
 
@@ -96,6 +100,7 @@ class NetfondsSpider(scrapy.Spider):
         ticker = response.meta['ticker']
         name = response.meta['name']
         paper_type = response.meta['paper_type']
+        exchange = response.meta['exchange']
 
         # Split
         lines = response.text.strip().split("\n")
@@ -145,4 +150,5 @@ class NetfondsSpider(scrapy.Spider):
         return {'ticker': ticker,
                 'name': name,
                 'paper_type': paper_type,
+                'exchange': exchange,
                 'data': matrix}
