@@ -3,6 +3,7 @@ import scrapy
 import datetime
 import numpy as np
 
+
 class NetfondsSpider(scrapy.Spider):
     name = 'netfonds'
     allowed_domains = ['netfonds.no']
@@ -24,7 +25,8 @@ class NetfondsSpider(scrapy.Spider):
 
                 # sanity check: check that the columns are as expected
                 columns = row.css("th::text").extract()
-                assert columns == ['Tick', 'Åpning', 'Høy', 'Lav', 'Siste', 'Volum', 'Verdi']
+                assert columns == ['Tick', 'Åpning', 'Høy',
+                                   'Lav', 'Siste', 'Volum', 'Verdi']
 
             # if this row contains table data
             elif(len(row.css("td"))):
@@ -40,7 +42,8 @@ class NetfondsSpider(scrapy.Spider):
                 yield scrapy.Request(url=absolute_url, callback=self.parse_instrument)
 
             else:
-                self.logger.error("This table row contains neither td or th elements")
+                self.logger.error(
+                    "This table row contains neither td or th elements")
 
     def parse_instrument(self, response):
 
@@ -49,20 +52,50 @@ class NetfondsSpider(scrapy.Spider):
         ticker = response.url.split("?paper=")[-1]
 
         # the instrument full name is at the top of the menu table to the left
-        long_name = response.css(".hsidetable .helemselected a::text").extract_first()
+        long_name = response.css(
+            ".hsidetable .helemselected a::text").extract_first()
+
+        url = "http://www.netfonds.no/quotes/about.php?paper=" + ticker
+
+        # scrape the about page
+        yield scrapy.Request(url=url,
+                             callback=self.parse_about,
+                             meta={'ticker': ticker, 'name': long_name})
+
+    def parse_about(self, response):
+
+        # unpack the meta-values passed from the previous request
+        ticker = response.meta['ticker']
+        name = response.meta['name']
 
         # construct the download url for the semicolon separated CSV containing market data
         url = "http://hopey.netfonds.no/paperhistory.php?paper=" + ticker + "&csv_format=sdv"
 
+        # the table rows containing the about info
+        table_rows = response.css("#updatetable1 tr")
+
+        paper_type = "unknown"
+
+        for tr in table_rows:
+            header = tr.css('th::text').extract_first()
+
+            # if this is row is of interest
+            if header == "Papirtype" or header == "Paper type":
+                paper_type = tr.css('td::text').extract_first()
+
+        # scrape the SDV file containing the historical data
         yield scrapy.Request(url=url,
                              callback=self.parse_sdv,
-                             meta={'ticker': ticker, 'name': long_name})
+                             meta={'ticker': ticker,
+                                   'name': name,
+                                   'paper_type': paper_type})
 
     def parse_sdv(self, response):
 
         # unpack the meta-values passed from the previous request
         ticker = response.meta['ticker']
         name = response.meta['name']
+        paper_type = response.meta['paper_type']
 
         # Split
         lines = response.text.strip().split("\n")
@@ -82,7 +115,7 @@ class NetfondsSpider(scrapy.Spider):
                                  ('close', 'f8'),
                                  ('volume', 'i8'),
                                  ('value', 'i8')])
-        
+
         # fill in the data
         for line_num, line in enumerate(lines):
 
@@ -100,7 +133,7 @@ class NetfondsSpider(scrapy.Spider):
             value = float(value)
 
             matrix[line_num] = date, open_price, high_price, low_price, \
-                               close_price, volume, value
+                close_price, volume, value
 
         # sort rows on time column, there has been some swapped samples detected in the source
         matrix = np.sort(matrix, order='date')
@@ -111,4 +144,5 @@ class NetfondsSpider(scrapy.Spider):
         # returned the parsed data in this storage class
         return {'ticker': ticker,
                 'name': name,
+                'paper_type': paper_type,
                 'data': matrix}

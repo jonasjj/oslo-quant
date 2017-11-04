@@ -74,6 +74,7 @@ class NasdaqOmxSpider(scrapy.Spider):
             
             ticker = instrument['Symbol']
             name = instrument['Name']
+            paper_type = instrument['AssetType']
 
             if ticker in self.requested_tickers:
                 self.logger.warning('Ticker "' + ticker + '" has already been requested. Skipping')
@@ -87,7 +88,7 @@ class NasdaqOmxSpider(scrapy.Spider):
                                   'startDate': '1950-09-03T00:00:00.000',
                                   'endDate': '2050-09-03T00:00:00.000',
                                   'timeOfDay': 'EOD'},
-                              meta={'ticker': ticker, 'name': name},
+                              meta={'ticker': ticker, 'name': name, 'paper_type': paper_type},
                               callback=self.parse_historical_data)
 
     # parse the POST response containing the ticker data
@@ -96,6 +97,7 @@ class NasdaqOmxSpider(scrapy.Spider):
         # unpack the meta values that we attached to this request
         ticker = response.meta['ticker']
         name = response.meta['name']
+        paper_type = response.meta['paper_type']
 
         # get a dict with the json data
         data = json.loads(response.body_as_unicode())
@@ -143,4 +145,5 @@ class NasdaqOmxSpider(scrapy.Spider):
         # returned the parsed data in this storage class
         return {'ticker': ticker,
                 'name': name,
+                'paper_type': paper_type,
                 'data': matrix}

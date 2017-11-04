@@ -43,7 +43,7 @@ class OsloquantPipeline(object):
     def process_item(self, item, spider):
 
         # create a new Instrument instance and add it to the market
-        instrument = Instrument(item['ticker'], item['name'], item['data'])
+        instrument = Instrument(item['ticker'], item['name'], item['paper_type'], item['data'])
         self.market.instruments.append(instrument)
 
         # return the original item, it won't be used anyway
