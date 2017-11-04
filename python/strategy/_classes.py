@@ -126,7 +126,7 @@ class Strategy(object, metaclass=ABCMeta):
         return self.__class__.__name__
         
     @abstractmethod
-    def execute(self, today):
+    def execute(self, today, portfolio):
         """
         Override this method and call super()
 
@@ -137,11 +137,13 @@ class Strategy(object, metaclass=ABCMeta):
         
         Args:
            today(datetime.date): Present day
+           portfolio: The updated portfolio.
 
         Return:
            A list of Order objects
         """
         self.today = today
+        self.portfolio = portfolio
 
     def get_instrument(self, ticker):
         """

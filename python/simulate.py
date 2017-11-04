@@ -28,7 +28,7 @@ def simulate(strategy, money, from_date, to_date, reference):
     for today in trading_days(from_date, to_date):
         
         # run the strategy for this date
-        orders = strategy.execute(today)
+        orders = strategy.execute(today, portfolio)
 
         # process the orders
         for order in orders:
@@ -62,13 +62,25 @@ def simulate(strategy, money, from_date, to_date, reference):
                 raise Exception("Order.action is neither 'sell' nor 'buy'")
 
             if order.filled:
+
                 # update the Share object if it exists for this ticker
                 try:
                     share = portfolio[order.ticker]
-                    new_quantity = share.quantity + order.quantity
-                    share.price = ((share.quantity * share.price) + \
-                                   (order.quantity * order.filled_price)) / new_quantity
+
+                    # the new number of shares of this stock we own now
+                    if order.action ==  'sell':
+                        new_quantity = share.quantity - order.quantity
+                    else:
+                        new_quantity = share.quantity + order.quantity
+
+                        share.price = ((share.quantity * share.price) + \
+                                       (order.quantity * order.filled_price)) / new_quantity
+
                     share.quantity = new_quantity
+
+                    if new_quantity == 0:
+                        portfolio.pop(order.ticker)
+
                 except KeyError:
                     # create a new share object
                     share = Share(order.ticker, order.quantity, order.filled_price)

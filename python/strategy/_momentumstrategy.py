@@ -31,8 +31,8 @@ class MomentumStrategy(Strategy):
         # this means the portfolio will be due to rebalancing today
         self.rebalance_date = self.trading_days_ago(self.rebalancing_days)
 
-    def execute(self, today):
-        super().execute(today)
+    def execute(self, today, portfolio):
+        super().execute(today, portfolio)
 
         # if the portfolio is due to rebalancing
         if self.rebalance_date <= self.trading_days_ago(self.rebalancing_days):
@@ -50,9 +50,9 @@ class MomentumStrategy(Strategy):
             orders = []
 
             # sell all shared in the portfolio which don't qualify
-            for share in self.portfolio:
-                if share.ticker not in top_tickers:
-                    o = Order(share.ticker, "sell", share.quantity)
+            for ticker, share in self.portfolio.items():
+                if ticker not in top_tickers:
+                    o = Order(ticker, "sell", share.quantity)
                     orders.append(o)
             
             # buy all stocks which we don't already own
