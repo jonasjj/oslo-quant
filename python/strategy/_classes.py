@@ -108,8 +108,8 @@ class Strategy(object, metaclass=ABCMeta):
 
         Args:
            money(float): Initial liquid assets
-           portfolio: Dict of Share objects represening
-                      the intital share holding positions
+           portfolio: Dict of Share objects indexed by ticker
+                     represening the intital share holding positions
            from_date(datetime.date): First daty of the simulation
            to_date(datetime.date): Last day of the simulation
         """

@@ -44,8 +44,25 @@ class MomentumStrategy(Strategy):
             top_performers = self.get_top_performers(compare_date,
                                                      self.number_of_stocks)
 
+            # convert list of instruments to list of tickers
+            top_tickers = [str(x) for x in top_performers]
+
+            orders = []
+
+            # sell all shared in the portfolio which don't qualify
+            for share in self.portfolio:
+                if share.ticker not in top_tickers:
+                    o = Order(share.ticker, "sell", share.quantity)
+                    orders.append(o)
+            
+            # buy all stocks which we don't already own
+            for ticker in top_tickers:
+                if ticker not in self.portfolio:
+                    o = Order(ticker, "buy", 100)
+                    orders.append(o)
+
             self.rebalance_date = today
-            return []
+            return orders
 
         else:
             return []

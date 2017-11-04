@@ -64,7 +64,7 @@ def simulate(strategy, money, from_date, to_date):
                     share = portfolio[order.ticker]
                     new_quantity = share.quantity + order.quantity
                     share.price = ((share.quantity * share.price) + \
-                                   (order.quantity * order.price)) / new_quantity
+                                   (order.quantity * order.filled_price)) / new_quantity
                     share.quantity = new_quantity
                 except KeyError:
                     # create a new share object
