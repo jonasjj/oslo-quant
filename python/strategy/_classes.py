@@ -26,7 +26,7 @@ class Order(object):
         self.cost = None
         
     def __str__(self):
-        s = "%s %s %s" % (self.action, self.quantity, self.ticker)
+        s = "%s %d %s" % (self.action, self.quantity, self.ticker)
         
         # check if self.price is defined
         if self.price is None:
@@ -126,7 +126,7 @@ class Strategy(object, metaclass=ABCMeta):
         return self.__class__.__name__
         
     @abstractmethod
-    def execute(self, today, portfolio):
+    def execute(self, today, portfolio, money):
         """
         Override this method and call super()
 
@@ -138,12 +138,14 @@ class Strategy(object, metaclass=ABCMeta):
         Args:
            today(datetime.date): Present day
            portfolio: The updated portfolio.
+           money(float): The updated liquid funds
 
         Return:
            A list of Order objects
         """
         self.today = today
         self.portfolio = portfolio
+        self.money = money
 
     def get_instrument(self, ticker):
         """

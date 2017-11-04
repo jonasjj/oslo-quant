@@ -258,6 +258,8 @@ class LinkedPlotWidget(pg.GraphicsLayoutWidget):
                 anchor_y = 1.25
             elif len(spans) == 5:
                 anchor_y = 1.2
+            elif len(spans) == 6:   
+                anchor_y = 1.15
             else:
                 raise Exception(
                     "%d line count text box isn't implemented" % anchor_y)

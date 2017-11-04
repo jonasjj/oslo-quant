@@ -35,7 +35,7 @@ def simulate(strategy, money, from_date, to_date, reference):
         action_label = None
 
         # run the strategy for this date
-        orders = strategy.execute(today, portfolio)
+        orders = strategy.execute(today, portfolio, money)
 
         # process the orders
         for order in orders:
@@ -49,22 +49,27 @@ def simulate(strategy, money, from_date, to_date, reference):
             except KeyError:
                 ticker_day = None
 
+            # assume orders get filled at average price
+            average_price = instrument.get_price(today)
+
             # If there was no trading for this ticker on this date
             # we're going to assume that this trade wasn't filled
             if ticker_day is None:
                 pass
 
-            # assume orders get filled at best price
+            # try to fill orders
             elif order.action == 'buy':
                 if order.price is None:
-                    order.fill(ticker_day['low'])
-                elif ticker_day['low'] <= order.price:
-                    order.fill(ticker_day['low'])
+                    order.fill(average_price)
+                elif average_price <= order.price:
+                    order.fill(average_price)
+                money -= order.total
             elif order.action == 'sell':
                 if order.price is None:
-                    order.fill(ticker_day['high'])
-                elif ticker_day['high'] >= order.price:
-                    order.fill(ticker_day['high'])
+                    order.fill(average_price)
+                elif average_price >= order.price:
+                    order.fill(average_price)
+                money += order.total
             else:
                 raise Exception("Order.action is neither 'sell' nor 'buy'")
 
@@ -102,8 +107,6 @@ def simulate(strategy, money, from_date, to_date, reference):
                                   order.filled_price)
                     portfolio[order.ticker] = share
 
-                money -= order.total
-
         interest = broker.calculate_interest(money)
         money += interest
 
@@ -119,8 +122,8 @@ def simulate(strategy, money, from_date, to_date, reference):
         loan_ratio = broker.calculate_loan_ratio(
             account_value, portfolio_value)
         if loan_ratio < broker.MIN_LOAN_TO_VALUE_RATIO:
-            raise Exception(
-                "Loan-to-value-ratio is too low: " + str(loan_ratio))
+            print("Loan-to-value-ratio is too low: " + str(loan_ratio))
+            break
 
         # calculate the value of the reference shares
         reference_value = reference_shares * reference.get_price(today)

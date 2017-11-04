@@ -231,11 +231,8 @@ class Instrument(object):
         # if the data is for the requested date
         if day_data['date'] == date:
 
-            # try to use the open price
-            try:
-                return day_data['open']
-            except:
-                return day_data['value']
+            # use the average price
+            return (day_data['high'] + day_data['low']) / 2
 
         # if this data belongs to an earlier date
         else:
