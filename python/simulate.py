@@ -13,7 +13,10 @@ from strategy import Share
 from strategy import broker
 from plotting import LinkedPlot
 
-def simulate(strategy, money, from_date, to_date):
+def simulate(strategy, money, from_date, to_date, reference):
+
+    # the number of shares we could have bought from the reference instrument
+    reference_shares = money / reference.get_price(from_date)
 
     # share holding positions {ticker: Share,}
     portfolio = {}
@@ -89,16 +92,20 @@ def simulate(strategy, money, from_date, to_date):
         if loan_ratio < broker.MIN_LOAN_TO_VALUE_RATIO:
             raise Exception("Loan-to-value-ratio is too low: " + str(loan_ratio))
 
+        # calculate the value of the reference shares
+        reference_value = reference_shares * reference.get_price(today)
+
         # add an entry to the log for today
         strategy_log.append((today,
                              account_value,
                              money,
                              portfolio_value,
-                             loan_ratio))
+                             loan_ratio,
+                             reference_value))
         
         # print a message summary of today
-        print("%s: account_value: %.0f, money: %.0f, interest: %.0f" % \
-              (str(today), account_value, money, interest))
+        print("%s: reference_value: %.0f, account_value: %.0f, money: %.0f, interest: %.0f" % \
+              (str(today), reference_value, account_value, money, interest))
         indent = len(str(today)) + 2
         for order in orders:
             print(' ' * indent + str(order))
@@ -107,32 +114,15 @@ def simulate(strategy, money, from_date, to_date):
                                            ('account_value', 'f8'),
                                            ('money', 'f8'),
                                            ('portfolio_value', 'f8'),
-                                           ('loan_ratio', 'f8')])
+                                           ('loan_ratio', 'f8'),
+                                           ('reference_value', 'f8')])
     
     # create a plot showing the behavior of the strategy
     plot = LinkedPlot(window_title=str(strategy))
     plot.add_plot("Account value", title_above=False)
-    plot.add_subplot(matrix, "account_value", "val")
+    plot.add_subplot(matrix, "account_value", "Account value")
+    plot.add_subplot(matrix, "reference_value", str(reference))
     plot.show()
-
-#    # add account value to the plot
-#    plot_inputs.append((matrix,
-#                        'account_value',
-#                        "Account value"))
-#
-#    # add liquid funds to the plot to the plot
-#    plot_inputs.append((matrix,
-#                        'money',
-#                        "Liquid funds (money)"))
-#
-#    # add liquid funds to the plot to the plot
-#    plot_inputs.append((matrix,
-#                        'portfolio_value',
-#                        "Portfolio value (equity)"))
-#    
-#
-#    # create the plot
-#    linked_plot(plot_inputs, window_title=str(strategy))
             
 if __name__ == "__main__":
 
@@ -142,6 +132,7 @@ if __name__ == "__main__":
     parser.add_argument("money", help="Initial money")
     parser.add_argument("from_date", help="From date: YYYY-MM-DD")
     parser.add_argument("to_date", help="To date: YYYY-MM-DD")
+    parser.add_argument("reference", help="Reference instrument (ex: OBX.OSE)")
     args = parser.parse_args()
 
     # load the strategy class
@@ -167,5 +158,8 @@ if __name__ == "__main__":
     # create the strategy instance
     strategy = strategy_class(money, [], from_date, to_date)
     
+    # get the reference instument
+    reference = get_instrument(args.reference.upper())
+
     # run the simulation
-    simulate(strategy, money, from_date, to_date)
+    simulate(strategy, money, from_date, to_date, reference)
