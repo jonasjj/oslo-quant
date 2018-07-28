@@ -45,13 +45,13 @@ Example plotting the OBX Total Return Index daily close prices:
 ```
 ./python/plot_instrument.py -i OBX.OSE close
 ```
-![plot_instrument_obx_close_2.png](https://jonasjulianjensen.com/wp-content/uploads/2017/08/plot_instrument_obx_close_2.png)
+![plot_instrument_obx_close_2.png](https://jonasjulianjensen.com/images/github/plot_instrument_obx_close_2.png)
 
 Linked plot with Statoil and Norwegian daily low prices:
 ```
 ./python/plot_instrument.py -i STL.OSE low -i NAS.OSE low
 ```
-![plot_instrument_stl_nas_low_2.png](https://jonasjulianjensen.com/wp-content/uploads/2017/08/plot_instrument_stl_nas_low_2.png)
+![plot_instrument_stl_nas_low_2.png](https://jonasjulianjensen.com/images/github/plot_instrument_stl_nas_low_2.png)
 
 Find the historical return from holding the OBX index through december:
 ```
@@ -71,4 +71,4 @@ Present the data in a plot which is averaged over a 7 days long sliding window:
 ```
 ./python/historical_return_best_dates.py --avg_gain --avg 7 --plot OBX.OSE 31
 ```
-![historical_return_best_dates_obx_2.png](https://jonasjulianjensen.com/wp-content/uploads/2017/08/historical_return_best_dates_obx_2.png)
+![historical_return_best_dates_obx_2.png](https://jonasjulianjensen.com/images/github/historical_return_best_dates_obx_2.png)
